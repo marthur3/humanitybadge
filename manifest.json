@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Humanity Badge - Verified Human Typing",
+  "version": "2.0",
+  "description": "Verify authentic human typing with anti-paste protection and Humanity Badge certification for Reddit posts and comments",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "identity",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://api.github.com/*",
+    "https://is.gd/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Typing Replay Recorder"
+  },
+  "options_page": "settings.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["replay.html", "replay.js", "replay.css", "standalone-replay.html", "share-formatter.js", "onboarding.html"],
+      "matches": ["*://*/*"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

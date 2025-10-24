@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Typing Replay</title>
+  <link rel="stylesheet" href="replay.css">
+</head>
+<body>
+  <div class="replay-container">
+    <header class="replay-header">
+      <h1>🎬 Typing Replay</h1>
+      <div class="replay-info">
+        <span id="site-info"></span>
+        <span id="duration-info"></span>
+      </div>
+    </header>
+
+    <div class="replay-controls">
+      <button id="play-btn">▶️ Play</button>
+      <button id="pause-btn" disabled>⏸️ Pause</button>
+      <button id="reset-btn">⏹️ Reset</button>
+      <div class="speed-controls">
+        <label>Speed:</label>
+        <select id="speed-select">
+          <option value="0.5">0.5x</option>
+          <option value="1" selected>1x</option>
+          <option value="2">2x</option>
+          <option value="4">4x</option>
+          <option value="8">8x</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div id="progress-fill"></div>
+      </div>
+      <div class="time-info">
+        <span id="current-time">0s</span> / <span id="total-time">0s</span>
+      </div>
+    </div>
+
+    <div class="replay-area">
+      <div class="textarea-container">
+        <textarea id="replay-textarea" readonly></textarea>
+        <div id="cursor"></div>
+      </div>
+    </div>
+
+    <div class="replay-stats">
+      <div class="stat">
+        <label>Characters:</label>
+        <span id="char-count">0</span>
+      </div>
+      <div class="stat">
+        <label>Words:</label>
+        <span id="word-count">0</span>
+      </div>
+      <div class="stat">
+        <label>WPM:</label>
+        <span id="wpm">0</span>
+      </div>
+    </div>
+
+    <footer class="replay-footer">
+      <p>Share this replay: <input type="text" id="share-url" readonly></p>
+      <button id="copy-link-btn">
+        Copy Link
+      </button>
+    </footer>
+  </div>
+
+  <script src="replay.js"></script>
+</body>
+</html>

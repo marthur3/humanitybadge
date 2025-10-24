@@ -1,0 +1,38 @@
+{
+  "name": "humanity-badge-extension",
+  "version": "2.0.0",
+  "description": "Browser extension for verifying authentic human typing with anti-paste protection",
+  "main": "content.js",
+  "scripts": {
+    "test": "node tests/unit.test.js",
+    "test:integration": "node tests/integration.test.js",
+    "test:all": "npm run test && npm run test:integration",
+    "lint": "eslint *.js tests/*.js --fix",
+    "build": "zip -r humanity-badge-extension.zip . -x '*.git*' '*.DS_Store*' 'tests/*' 'node_modules/*' 'package*.json'",
+    "dev": "echo 'Load unpacked extension from current directory in Chrome'"
+  },
+  "keywords": [
+    "browser-extension",
+    "reddit",
+    "typing-verification",
+    "anti-paste",
+    "human-verification",
+    "chrome-extension"
+  ],
+  "author": "Humanity Badge Team",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/humanitybadge/extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/humanitybadge/extension/issues"
+  },
+  "homepage": "https://github.com/humanitybadge/extension#readme"
+}

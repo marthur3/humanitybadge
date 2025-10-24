@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Welcome to Humanity Badge</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .header .subtitle {
+      font-size: 16px;
+      opacity: 0.95;
+    }
+
+    .content {
+      padding: 40px 30px;
+    }
+
+    .welcome-message {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .welcome-message h2 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .welcome-message p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .feature-list {
+      margin: 30px 0;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .feature-text h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .feature-text p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .cta-section {
+      background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 30px 0;
+      text-align: center;
+    }
+
+    .cta-section h3 {
+      font-size: 20px;
+      color: #2e7d32;
+      margin-bottom: 15px;
+    }
+
+    .cta-section p {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #666;
+      border: 2px solid #ddd;
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: #f5f5f5;
+      border-color: #ccc;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .info-box p {
+      font-size: 14px;
+      color: #1565c0;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .status-message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status-message.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+
+    .status-message.success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+
+    .status-message.info {
+      background: #fff3e0;
+      color: #f57c00;
+      border: 1px solid #ffe0b2;
+    }
+
+    #oauth-step {
+      display: none;
+    }
+
+    .device-code-display {
+      background: #f5f5f5;
+      border: 2px dashed #4CAF50;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .user-code {
+      font-size: 32px;
+      font-weight: 700;
+      color: #4CAF50;
+      letter-spacing: 4px;
+      font-family: monospace;
+      margin: 15px 0;
+    }
+
+    .verification-link {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 12px 24px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .verification-link:hover {
+      background: #45a049;
+    }
+
+    .polling-status {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4CAF50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✓ Humanity Badge</h1>
+      <p class="subtitle">Verify Your Human Authenticity</p>
+    </div>
+
+    <div class="content">
+      <!-- Initial Welcome -->
+      <div id="welcome-step">
+        <div class="welcome-message">
+          <h2>Welcome! Let's Get You Set Up</h2>
+          <p>Humanity Badge helps you prove you're human by recording your natural typing patterns.</p>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <div class="feature-text">
+              <h3>Professional Sharing</h3>
+              <p>Connect GitHub to get short, trusted URLs that look professional on Reddit & LinkedIn.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">♾️</div>
+            <div class="feature-text">
+              <h3>Unlimited Verifications</h3>
+              <p>Share as many typing proofs as you want without storage limits.</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-text">
+              <h3>Secure & Private</h3>
+              <p>Your recordings are stored privately. Only people with the link can view them.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-section">
+          <h3>Connect with GitHub (Recommended)</h3>
+          <p>
+            Get the best experience with short, professional URLs for your typing verifications.
+            Takes just 30 seconds to set up!
+          </p>
+          <button id="connect-github-btn" class="btn btn-primary">
+            Connect with GitHub
+          </button>
+        </div>
+
+        <div class="button-group">
+          <button id="skip-btn" class="btn btn-secondary">
+            Skip for now - I'll use basic URLs
+          </button>
+        </div>
+
+        <div class="info-box">
+          <p>
+            <strong>Don't have GitHub?</strong> No problem! The extension works great without it.
+            You'll get functional URLs via is.gd instead. You can always connect GitHub later in Settings.
+          </p>
+        </div>
+
+        <div id="status-message" class="status-message"></div>
+      </div>
+
+      <!-- OAuth Flow Step -->
+      <div id="oauth-step">
+        <div class="welcome-message">
+          <h2>Authorize Humanity Badge</h2>
+          <p>Follow these steps to connect your GitHub account:</p>
+        </div>
+
+        <div class="device-code-display">
+          <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Your verification code:</p>
+          <div class="user-code" id="user-code">LOADING...</div>
+          <a id="verification-link" href="#" target="_blank" class="verification-link">
+            Open GitHub & Enter Code
+          </a>
+        </div>
+
+        <div class="info-box">
+          <p>
+            <strong>Instructions:</strong><br>
+            1. Click the button above to open GitHub<br>
+            2. Enter the code shown above<br>
+            3. Click "Authorize" on GitHub<br>
+            4. Return to this page - we'll automatically detect authorization
+          </p>
+        </div>
+
+        <div class="polling-status" id="polling-status">
+          <div class="spinner"></div>
+          <span>Waiting for authorization...</span>
+        </div>
+
+        <div class="button-group">
+          <button id="cancel-oauth-btn" class="btn btn-secondary">
+            Cancel & Go Back
+          </button>
+        </div>
+
+        <div id="oauth-status-message" class="status-message"></div>
+      </div>
+
+      <!-- Success Step -->
+      <div id="success-step" style="display: none;">
+        <div class="welcome-message">
+          <h2>🎉 All Set!</h2>
+          <p>Your Humanity Badge is ready to use.</p>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">✓</div>
+            <div class="feature-text">
+              <h3>You're Ready!</h3>
+              <p id="success-message">Extension is configured and ready to verify your typing.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="close-onboarding-btn" class="btn btn-primary">
+            Start Using Humanity Badge
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="github-oauth.js"></script>
+  <script src="onboarding.js"></script>
+</body>
+</html>

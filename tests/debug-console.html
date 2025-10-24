@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Humanity Badge - Debug Console</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            background: #333;
+            color: #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .debug-section {
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .debug-section h3 {
+            color: #ffaa00;
+            margin-top: 0;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+        
+        .log {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .status.good { background: #004400; color: #00ff00; }
+        .status.warning { background: #444400; color: #ffff00; }
+        .status.error { background: #440000; color: #ff0000; }
+        .status.info { background: #000044; color: #00aaff; }
+        
+        button {
+            background: #555;
+            color: #fff;
+            border: 1px solid #777;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #666;
+        }
+        
+        textarea {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px;
+            width: 100%;
+            height: 80px;
+            font-family: inherit;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .metric {
+            background: #333;
+            padding: 10px;
+            text-align: center;
+            border-radius: 3px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Humanity Badge Debug Console</h1>
+        <p>Real-time debugging for extension development</p>
+    </div>
+
+    <div class="debug-section">
+        <h3>Extension Status</h3>
+        <div id="extensionStatus" class="status info">Checking extension...</div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="textareaCount">0</div>
+                <div>Textareas</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="buttonCount">0</div>
+                <div>Buttons</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="wrapperCount">0</div>
+                <div>Wrappers</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="logCount">0</div>
+                <div>Log Messages</div>
+            </div>
+        </div>
+        
+        <button onclick="checkExtension()">🔍 Check Extension</button>
+        <button onclick="forceAttach()">🔧 Force Attach</button>
+        <button onclick="clearLogs()">🗑️ Clear Logs</button>
+        <button onclick="exportLogs()">📥 Export Logs</button>
+    </div>
+
+    <div class="debug-section">
+        <h3>Test Elements</h3>
+        <p>These elements should get record buttons:</p>
+        
+        <textarea id="testTextarea1" placeholder="Test textarea 1"></textarea>
+        <textarea id="testTextarea2" placeholder="Test textarea 2 (Reddit style)" data-testid="comment-submission-form-richtext"></textarea>
+        
+        <div contenteditable="true" 
+             style="min-height: 60px; border: 1px solid #555; padding: 10px; background: #333; margin: 10px 0;"
+             placeholder="ContentEditable test">
+            Click here to test contenteditable
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Console Log Monitor</h3>
+        <div id="consoleLog" class="log">Monitoring console messages...</div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Extension Messages</h3>
+        <div id="extensionLog" class="log">Waiting for extension messages...</div>
+    </div>
+
+    <div class="debug-section">
+        <h3>DOM Changes</h3>
+        <div id="domLog" class="log">Monitoring DOM mutations...</div>
+    </div>
+
+    <script>
+        let logs = [];
+        let extensionLogs = [];
+        let domLogs = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ timestamp, message, type });
+            
+            const consoleLog = document.getElementById('consoleLog');
+            const div = document.createElement('div');
+            div.textContent = logEntry;
+            div.style.color = type === 'error' ? '#ff4444' : type === 'warning' ? '#ffaa00' : '#00ff00';
+            consoleLog.appendChild(div);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            document.getElementById('logCount').textContent = logs.length;
+        }
+        
+        function addExtensionLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            extensionLogs.push({ timestamp, message });
+            
+            const extensionLog = document.getElementById('extensionLog');
+            const div = document.createElement('div');
+            div.textContent = `[${timestamp}] ${message}`;
+            div.style.color = '#00aaff';
+            extensionLog.appendChild(div);
+            extensionLog.scrollTop = extensionLog.scrollHeight;
+        }
+        
+        function addDomLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            domLogs.push({ timestamp, message });
+            
+            const domLog = document.getElementById('domLog');
+            const div = document.createElement('div');
+            div.textContent = `[${timestamp}] ${message}`;
+            div.style.color = '#ffaa00';
+            domLog.appendChild(div);
+            domLog.scrollTop = domLog.scrollHeight;
+        }
+        
+        function updateMetrics() {
+            document.getElementById('textareaCount').textContent = document.querySelectorAll('textarea').length;
+            document.getElementById('buttonCount').textContent = document.querySelectorAll('.typing-record-btn').length;
+            document.getElementById('wrapperCount').textContent = document.querySelectorAll('.typing-recorder-wrapper').length;
+        }
+        
+        function checkExtension() {
+            addLog('Running extension check...', 'info');
+            
+            const textareas = document.querySelectorAll('textarea');
+            const buttons = document.querySelectorAll('.typing-record-btn');
+            const wrappers = document.querySelectorAll('.typing-recorder-wrapper');
+            
+            addLog(`Found ${textareas.length} textareas, ${buttons.length} buttons, ${wrappers.length} wrappers`);
+            
+            const status = document.getElementById('extensionStatus');
+            if (buttons.length > 0) {
+                status.textContent = `✅ Extension working! ${buttons.length} button(s) attached`;
+                status.className = 'status good';
+                addLog('Extension is working correctly!', 'info');
+            } else if (textareas.length > 0) {
+                status.textContent = `⚠️ Textareas found but no buttons attached`;
+                status.className = 'status warning';
+                addLog('Extension loaded but buttons not attached', 'warning');
+            } else {
+                status.textContent = `❌ No textareas or buttons found`;
+                status.className = 'status error';
+                addLog('Extension not working - no elements found', 'error');
+            }
+            
+            updateMetrics();
+        }
+        
+        function forceAttach() {
+            addLog('Attempting to force button attachment...', 'info');
+            
+            // Simulate what the extension should do
+            const textareas = document.querySelectorAll('textarea:not([data-typing-recorder-attached])');
+            addLog(`Found ${textareas.length} unattached textareas`);
+            
+            textareas.forEach((textarea, index) => {
+                addLog(`Processing textarea ${index + 1}: ${textarea.id || 'no-id'}`);
+                
+                // Check if it would be valid
+                const rect = textarea.getBoundingClientRect();
+                if (rect.width > 50 && rect.height > 20) {
+                    addLog(`Textarea ${index + 1} appears valid (${rect.width}x${rect.height})`);
+                } else {
+                    addLog(`Textarea ${index + 1} too small (${rect.width}x${rect.height})`, 'warning');
+                }
+            });
+        }
+        
+        function clearLogs() {
+            logs = [];
+            extensionLogs = [];
+            domLogs = [];
+            
+            document.getElementById('consoleLog').innerHTML = 'Console cleared...';
+            document.getElementById('extensionLog').innerHTML = 'Extension log cleared...';
+            document.getElementById('domLog').innerHTML = 'DOM log cleared...';
+            document.getElementById('logCount').textContent = '0';
+        }
+        
+        function exportLogs() {
+            const allLogs = {
+                console: logs,
+                extension: extensionLogs,
+                dom: domLogs,
+                metrics: {
+                    textareas: document.querySelectorAll('textarea').length,
+                    buttons: document.querySelectorAll('.typing-record-btn').length,
+                    wrappers: document.querySelectorAll('.typing-recorder-wrapper').length
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(allLogs, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `humanity-badge-debug-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addLog('Debug logs exported', 'info');
+        }
+        
+        // Monitor DOM changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.classList && node.classList.contains('typing-record-btn')) {
+                                addDomLog(`Record button added: ${node.title || 'no title'}`);
+                                addExtensionLog('Record button detected in DOM!');
+                                updateMetrics();
+                            } else if (node.classList && node.classList.contains('typing-recorder-wrapper')) {
+                                addDomLog('Recorder wrapper added');
+                                updateMetrics();
+                            } else if (node.tagName === 'TEXTAREA') {
+                                addDomLog(`New textarea added: ${node.id || 'no-id'}`);
+                                updateMetrics();
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // Override console methods to capture logs
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.join(' ');
+            if (message.includes('HumanityBadge')) {
+                addExtensionLog(message);
+            } else {
+                addLog(message, 'info');
+            }
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog(args.join(' '), 'warning');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        // Initialize
+        addLog('Debug console initialized', 'info');
+        updateMetrics();
+        
+        // Auto-check every 2 seconds
+        setInterval(() => {
+            updateMetrics();
+            
+            // Auto-detect extension activity
+            const buttons = document.querySelectorAll('.typing-record-btn');
+            if (buttons.length > 0) {
+                const status = document.getElementById('extensionStatus');
+                if (!status.textContent.includes('✅')) {
+                    status.textContent = `✅ Extension detected! ${buttons.length} button(s)`;
+                    status.className = 'status good';
+                    addExtensionLog(`Auto-detected ${buttons.length} record buttons`);
+                }
+            }
+        }, 2000);
+        
+        // Initial check
+        setTimeout(checkExtension, 1000);
+    </script>
+</body>
+</html>

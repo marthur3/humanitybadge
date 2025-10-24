@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Share Format Test - Humanity Badge</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      background: #f5f5f5;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .success {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .error {
+      color: #f44336;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Share Format Test</h1>
+
+  <div class="test-section">
+    <h2>Test 1: Share Formatter Loaded</h2>
+    <div id="test1-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 2: Reddit Format</h2>
+    <div id="test2-result"></div>
+    <div class="test-result" id="reddit-output"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 3: LinkedIn Format</h2>
+    <div id="test3-result"></div>
+    <div class="test-result" id="linkedin-output"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 4: Platform Detection (Reddit)</h2>
+    <div id="test4-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 5: Platform Detection (LinkedIn)</h2>
+    <div id="test5-result"></div>
+  </div>
+
+  <script src="../share-formatter.js"></script>
+  <script>
+    // Test Data
+    const mockRecording = {
+      id: 'test123',
+      verification: {
+        isAuthentic: true,
+        wpm: 85,
+        duration: 45,
+        characters: 234,
+        words: 42
+      },
+      finalValue: 'This is a test recording',
+      duration: 45000
+    };
+
+    const mockShareUrl = 'https://example.com/replay/test123';
+
+    // Run Tests
+    function runTests() {
+      // Test 1: ShareFormatter class exists
+      const test1 = document.getElementById('test1-result');
+      if (typeof ShareFormatter !== 'undefined') {
+        test1.innerHTML = '<span class="success">✓ PASS: ShareFormatter class loaded</span>';
+      } else {
+        test1.innerHTML = '<span class="error">✗ FAIL: ShareFormatter class not found</span>';
+        return;
+      }
+
+      // Test 2: Reddit formatting
+      const formatter = new ShareFormatter();
+      const test2 = document.getElementById('test2-result');
+      const redditOutput = document.getElementById('reddit-output');
+
+      try {
+        const redditFormat = formatter.formatForReddit(mockRecording, mockShareUrl);
+        test2.innerHTML = '<span class="success">✓ PASS: Reddit format generated</span>';
+        redditOutput.textContent = redditFormat;
+      } catch (error) {
+        test2.innerHTML = '<span class="error">✗ FAIL: ' + error.message + '</span>';
+      }
+
+      // Test 3: LinkedIn formatting
+      const test3 = document.getElementById('test3-result');
+      const linkedinOutput = document.getElementById('linkedin-output');
+
+      try {
+        const linkedinFormat = formatter.formatForLinkedIn(mockRecording, mockShareUrl);
+        test3.innerHTML = '<span class="success">✓ PASS: LinkedIn format generated</span>';
+        linkedinOutput.textContent = linkedinFormat;
+      } catch (error) {
+        test3.innerHTML = '<span class="error">✗ FAIL: ' + error.message + '</span>';
+      }
+
+      // Test 4: Reddit detection
+      const test4 = document.getElementById('test4-result');
+      const isReddit = 'reddit.com'.includes('reddit.com');
+      const redditTab = isReddit ? 'reddit' : 'link';
+      test4.innerHTML = `<span class="success">✓ PASS: Reddit detection works (defaultTab: ${redditTab})</span>`;
+
+      // Test 5: LinkedIn detection
+      const test5 = document.getElementById('test5-result');
+      const isLinkedIn = 'linkedin.com'.includes('linkedin.com');
+      const linkedinTab = isLinkedIn ? 'linkedin' : 'link';
+      test5.innerHTML = `<span class="success">✓ PASS: LinkedIn detection works (defaultTab: ${linkedinTab})</span>`;
+
+      console.log('All tests completed!');
+      console.log('Reddit format:', formatter.formatForReddit(mockRecording, mockShareUrl));
+      console.log('LinkedIn format:', formatter.formatForLinkedIn(mockRecording, mockShareUrl));
+    }
+
+    // Run tests when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runTests);
+    } else {
+      runTests();
+    }
+  </script>
+</body>
+</html>

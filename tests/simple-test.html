@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Humanity Badge Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .debug {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple Humanity Badge Test</h1>
+    
+    <div class="status loading" id="extensionStatus">
+        Loading extension... Please wait.
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Textarea #1</h2>
+        <p>This should get a ✓ button if the extension is working:</p>
+        <textarea placeholder="Type here to test the extension..."></textarea>
+        <div class="debug" id="debug1">Waiting for extension...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Textarea #2 (Reddit Style)</h2>
+        <p>This simulates Reddit comment form:</p>
+        <div data-testid="comment-submission-form-richtext">
+            <textarea placeholder="What are your thoughts? (Reddit simulation)"></textarea>
+        </div>
+        <div class="debug" id="debug2">Waiting for extension...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test ContentEditable</h2>
+        <p>This tests rich text editing:</p>
+        <div contenteditable="true" style="min-height: 80px; border: 2px solid #ddd; padding: 10px; background: white; border-radius: 4px;">
+            Click here and type to test contenteditable support...
+        </div>
+        <div class="debug" id="debug3">Waiting for extension...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Information</h2>
+        <div class="debug" id="debugInfo">
+            Extension loading...
+        </div>
+    </div>
+
+    <script>
+        let checkCount = 0;
+        const maxChecks = 100;
+        
+        function updateStatus(message, type = 'loading') {
+            const status = document.getElementById('extensionStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            const textareas = document.querySelectorAll('textarea').length;
+            const contentEditable = document.querySelectorAll('[contenteditable="true"]').length;
+            const buttons = document.querySelectorAll('.typing-record-btn').length;
+            const wrappers = document.querySelectorAll('.typing-recorder-wrapper').length;
+            
+            debugInfo.textContent = 
+                `Check #${checkCount}/${maxChecks}\n` +
+                `Textareas found: ${textareas}\n` +
+                `ContentEditable found: ${contentEditable}\n` +
+                `Record buttons found: ${buttons}\n` +
+                `Wrappers created: ${wrappers}\n` +
+                `Page readyState: ${document.readyState}\n` +
+                `URL: ${window.location.href}\n` +
+                `User agent: ${navigator.userAgent.substring(0, 50)}...`;
+        }
+        
+        function checkForExtension() {
+            checkCount++;
+            updateDebugInfo();
+            
+            // Check for extension using multiple methods
+            const buttons = document.querySelectorAll('.typing-record-btn');
+            const loaded = window.HumanityBadgeLoaded;
+            const recorder = window.HumanityBadgeRecorder;
+            
+            // Try the new detection method
+            let extensionStatus = null;
+            if (window.checkHumanityBadge) {
+                extensionStatus = window.checkHumanityBadge();
+            }
+            
+            if (buttons.length > 0 || (loaded && recorder)) {
+                updateStatus(`✅ Extension working! Found ${buttons.length} button(s)`, 'success');
+                
+                // Update individual test status
+                document.getElementById('debug1').textContent = `✅ Button attached: ${buttons.length > 0 ? 'YES' : 'NO'}`;
+                document.getElementById('debug2').textContent = `✅ Reddit test: ${buttons.length > 1 ? 'PASS' : 'PARTIAL'}`;
+                document.getElementById('debug3').textContent = `✅ ContentEditable: ${buttons.length > 2 ? 'PASS' : 'PARTIAL'}`;
+                
+                // Test button functionality
+                if (buttons[0]) {
+                    buttons[0].style.border = '2px solid red';
+                    buttons[0].title += ' - TEST DETECTED';
+                }
+                
+                return true;
+            } else if (loaded) {
+                updateStatus(`⚠️ Extension loaded but no buttons (check console)`, 'warning');
+                document.getElementById('debug1').textContent = '⚠️ Extension loaded, buttons pending';
+                return false; // Keep checking
+            } else if (checkCount >= maxChecks) {
+                updateStatus('❌ Extension not detected after timeout', 'error');
+                
+                document.getElementById('debug1').textContent = '❌ Extension not loaded';
+                document.getElementById('debug2').textContent = '❌ Check Chrome extensions';  
+                document.getElementById('debug3').textContent = '❌ See console for errors';
+                
+                // Show detailed debugging info
+                console.error('Extension detection failed. Debug info:', {
+                    HumanityBadgeLoaded: window.HumanityBadgeLoaded,
+                    HumanityBadgeRecorder: window.HumanityBadgeRecorder,
+                    checkFunction: typeof window.checkHumanityBadge,
+                    extensionStatus: extensionStatus,
+                    consoleErrors: 'Check console for HumanityBadge errors'
+                });
+                
+                return false;
+            } else {
+                updateStatus(`🔄 Checking for extension... (${checkCount}/${maxChecks})`, 'loading');
+                return false;
+            }
+        }
+        
+        // Check every 200ms
+        const checkInterval = setInterval(() => {
+            if (checkForExtension()) {
+                clearInterval(checkInterval);
+                console.log('✅ Humanity Badge extension detected successfully!');
+            }
+        }, 200);
+        
+        // Also check on page events
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM Content Loaded');
+            setTimeout(checkForExtension, 100);
+        });
+        
+        window.addEventListener('load', () => {
+            console.log('Window Loaded');
+            setTimeout(checkForExtension, 100);
+        });
+        
+        // Manual trigger
+        setTimeout(() => {
+            console.log('Manual check after 1 second');
+            checkForExtension();
+        }, 1000);
+        
+        // Log any errors
+        window.addEventListener('error', (e) => {
+            console.error('Page Error:', e.error);
+            document.getElementById('debugInfo').textContent += `\nError: ${e.error.message}`;
+        });
+        
+        // Override console to capture extension logs
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (args.some(arg => String(arg).includes('HumanityBadge'))) {
+                document.getElementById('debugInfo').textContent += `\nExtension: ${args.join(' ')}`;
+            }
+        };
+        
+        console.log('🧪 Simple test page initialized');
+    </script>
+</body>
+</html>
