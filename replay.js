@@ -78,14 +78,14 @@ class TypingReplayPlayer {
       const htmlContent = htmlFile.content;
 
       // Extract recording data from HTML
-      // The standalone HTML has: window.RECORDING_DATA = {...};
-      const recordingMatch = htmlContent.match(/window\.RECORDING_DATA\s*=\s*({[\s\S]*?});/);
+      // The standalone HTML has: <script id="recording-data" type="application/json">{{RECORDING_DATA}}</script>
+      const recordingMatch = htmlContent.match(/<script[^>]*id="recording-data"[^>]*>([\s\S]*?)<\/script>/);
 
       if (!recordingMatch) {
         throw new Error('Recording data not found in Gist HTML');
       }
 
-      const recordingJson = recordingMatch[1];
+      const recordingJson = recordingMatch[1].trim();
       this.recording = JSON.parse(recordingJson);
 
       console.log('✓ Recording loaded from Gist:', this.recording.id);
