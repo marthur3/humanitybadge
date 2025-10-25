@@ -382,6 +382,9 @@ class TypingRecorder {
           <button id="humanity-view-btn" style="width: 100%; padding: 10px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">
             👁️ View Replay
           </button>
+          <p style="font-size: 12px; color: #4CAF50; margin: 10px 0 0 0; background: #e8f5e8; padding: 8px; border-radius: 4px;">
+            ✓ Works for anyone - No extension needed!
+          </p>
         </div>
 
         <div class="humanity-tab-content" data-content="download" style="display: none;">

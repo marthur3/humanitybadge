@@ -6,6 +6,8 @@ class RecordingManager {
     this.recordings = new Map();
     this.gistUploader = new GistUploader();
     this.urlShortener = new URLShortener();
+    // GitHub Pages URL for universal replay viewing (works without extension)
+    this.replayBaseUrl = 'https://marthur3.github.io/humanitybadge/replay.html';
     this.init();
   }
 
@@ -139,8 +141,8 @@ class RecordingManager {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icon48.png',
-        title: 'Humanity Badge - Get Better URLs',
-        message: 'Connect GitHub for short, professional URLs instead of long extension links. Click Settings to connect!',
+        title: 'Humanity Badge - Get Professional URLs',
+        message: 'Connect GitHub Gist for short gist.github.com/yourname/... URLs instead of long hash links. Click Settings to connect!',
         priority: 1
       });
 
@@ -201,8 +203,8 @@ class RecordingManager {
     // TIER 2: Try is.gd URL shortening for hash-encoded URLs
     if (recordingSize < 500000) {
       const encoded = this.encodeRecording(recordingData);
-      const baseUrl = chrome.runtime.getURL('replay.html');
-      const longUrl = `${baseUrl}#data=${encoded}`;
+      // Use GitHub Pages URL so links work for anyone (no extension needed)
+      const longUrl = `${this.replayBaseUrl}#data=${encoded}`;
 
       // Check if URL is suitable for shortening
       const canShorten = this.urlShortener.canShorten(longUrl);
@@ -237,7 +239,7 @@ class RecordingManager {
 
     // TIER 4: For very large recordings (>500KB), recommend HTML download
     return {
-      shareUrl: chrome.runtime.getURL(`replay.html?id=${recordingData.id}`),
+      shareUrl: null, // Too large for URL sharing
       shareType: 'html-only',
       recordingSize: recordingSize,
       htmlExport: htmlExport,
