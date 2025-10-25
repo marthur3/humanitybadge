@@ -243,11 +243,24 @@ class TypingRecorder {
       action: 'saveRecording',
       data: this.recording
     }, (response) => {
-      if (chrome.runtime.lastError) return;
+      // Check for extension context invalidation (happens when extension is reloaded)
+      if (chrome.runtime.lastError) {
+        console.error('Runtime error:', chrome.runtime.lastError);
+
+        // Check if it's a context invalidation error
+        if (chrome.runtime.lastError.message.includes('Extension context invalidated')) {
+          this.showMessage('⚠️ Extension was reloaded. Please refresh this page and try again.', '#ff9800');
+        } else {
+          this.showMessage('❌ Failed to save recording: ' + chrome.runtime.lastError.message, '#f44336');
+        }
+        return;
+      }
 
       if (response && response.success) {
         // Show share dialog with link and metadata
         this.showShareDialog(response);
+      } else {
+        this.showMessage('❌ Failed to save recording: ' + (response?.error || 'Unknown error'), '#f44336');
       }
     });
   }
