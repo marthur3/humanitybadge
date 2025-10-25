@@ -180,19 +180,29 @@ class RecordingManager {
     };
 
     // TIER 1: Try GitHub Gist upload (if token configured)
+    // Use hybrid approach: Store in Gist, view on GitHub Pages
     const hasGithubToken = await this.gistUploader.hasToken();
     if (hasGithubToken && htmlExport) {
       console.log('Attempting GitHub Gist upload...');
       const gistResult = await this.gistUploader.uploadToGist(htmlExport, recordingMeta);
 
       if (gistResult.success) {
-        console.log('✓ GitHub Gist upload successful:', gistResult.url);
+        // Extract Gist ID from URL (e.g., gist.github.com/user/abc123 -> abc123)
+        const gistId = gistResult.gistId;
+
+        // Create GitHub Pages URL that loads from Gist
+        const githubPagesUrl = `${this.replayBaseUrl}?gist=${gistId}`;
+
+        console.log('✓ GitHub Gist upload successful. Gist ID:', gistId);
+        console.log('✓ Shareable URL (GitHub Pages + Gist):', githubPagesUrl);
+
         return {
-          shareUrl: gistResult.url,
-          shareType: 'github-gist',
+          shareUrl: githubPagesUrl, // GitHub Pages URL (universal access)
+          shareType: 'github-gist', // Still a Gist (for UI display)
           recordingSize: recordingSize,
           htmlExport: htmlExport,
-          gistId: gistResult.gistId
+          gistId: gistId,
+          gistUrl: gistResult.url // Original Gist URL (for reference)
         };
       } else {
         console.warn('GitHub Gist upload failed:', gistResult.error);

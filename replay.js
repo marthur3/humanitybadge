@@ -16,7 +16,21 @@ class TypingReplayPlayer {
   }
 
   async init() {
-    // First, check if recording data is in URL hash
+    // Priority 1: Check for ?gist= parameter (GitHub Gist loading)
+    const urlParams = new URLSearchParams(window.location.search);
+    const gistId = urlParams.get('gist');
+
+    if (gistId) {
+      await this.loadFromGist(gistId);
+      if (this.recording) {
+        this.setupReplay();
+        this.setupControls();
+        this.setupShareUrl();
+      }
+      return;
+    }
+
+    // Priority 2: Check if recording data is in URL hash
     const hashData = this.loadFromHash();
 
     if (hashData) {
@@ -27,8 +41,7 @@ class TypingReplayPlayer {
       return;
     }
 
-    // Fall back to extension storage (original behavior)
-    const urlParams = new URLSearchParams(window.location.search);
+    // Priority 3: Fall back to extension storage (original behavior)
     const recordingId = urlParams.get('id');
 
     if (!recordingId) {
@@ -39,6 +52,50 @@ class TypingReplayPlayer {
     await this.loadRecording(recordingId);
     this.setupControls();
     this.setupShareUrl();
+  }
+
+  async loadFromGist(gistId) {
+    try {
+      console.log('Loading recording from GitHub Gist:', gistId);
+
+      // Fetch Gist from GitHub API (public, no auth needed)
+      const response = await fetch(`https://api.github.com/gists/${gistId}`);
+
+      if (!response.ok) {
+        throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
+      }
+
+      const gistData = await response.json();
+      console.log('Gist loaded:', gistData.id);
+
+      // Find the HTML file in the Gist (should be the only file)
+      const files = Object.values(gistData.files);
+      if (files.length === 0) {
+        throw new Error('No files found in Gist');
+      }
+
+      const htmlFile = files[0]; // Take first file
+      const htmlContent = htmlFile.content;
+
+      // Extract recording data from HTML
+      // The standalone HTML has: window.RECORDING_DATA = {...};
+      const recordingMatch = htmlContent.match(/window\.RECORDING_DATA\s*=\s*({[\s\S]*?});/);
+
+      if (!recordingMatch) {
+        throw new Error('Recording data not found in Gist HTML');
+      }
+
+      const recordingJson = recordingMatch[1];
+      this.recording = JSON.parse(recordingJson);
+
+      console.log('✓ Recording loaded from Gist:', this.recording.id);
+      return this.recording;
+
+    } catch (error) {
+      console.error('Failed to load from Gist:', error);
+      this.showError(`Failed to load recording from Gist: ${error.message}`);
+      return null;
+    }
   }
 
   loadFromHash() {
