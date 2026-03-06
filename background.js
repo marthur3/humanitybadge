@@ -55,9 +55,10 @@ class RecordingManager {
 
   async saveRecording(recordingData) {
     try {
+      const shareUrl = await this.generateShareUrl(recordingData);
+      recordingData.shareUrl = shareUrl;
       this.recordings.set(recordingData.id, recordingData);
       await this.saveRecordings();
-      const shareUrl = await this.generateShareUrl(recordingData);
       return { success: true, shareUrl, id: recordingData.id };
     } catch (error) {
       console.error('Failed to save recording:', error);

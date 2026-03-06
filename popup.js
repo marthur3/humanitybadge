@@ -89,7 +89,8 @@ class PopupManager {
     container.addEventListener('click', (e) => {
       const id = e.target.dataset.id;
       if (!id) return;
-      if (e.target.classList.contains('view-btn')) this.viewReplay(id);
+      if (e.target.classList.contains('view-btn')) this.viewReplay(e.target.dataset.url, id);
+      else if (e.target.classList.contains('copy-btn')) this.copyLink(e.target.dataset.url, id);
       else if (e.target.classList.contains('delete-btn')) this.deleteRecording(id);
     });
   }
@@ -111,15 +112,28 @@ class PopupManager {
         <div class="recording-preview">"${preview}"</div>
         <div class="recording-meta">${duration}s${rec.verification?.wpm ? ' · ' + rec.verification.wpm + ' WPM' : ''} · ${rec.domain || ''}</div>
         <div class="recording-actions">
-          <button class="btn btn-primary view-btn" data-id="${rec.id}">View Replay</button>
+          <button class="btn btn-primary view-btn" data-id="${rec.id}" data-url="${rec.shareUrl || ''}">View Replay</button>
+          <button class="btn btn-outline copy-btn" data-id="${rec.id}" data-url="${rec.shareUrl || ''}">Copy Link</button>
           <button class="btn btn-danger-outline delete-btn" data-id="${rec.id}">Delete</button>
         </div>
       </div>
     `;
   }
 
-  viewReplay(id) {
-    chrome.tabs.create({ url: chrome.runtime.getURL(`replay.html?id=${id}`) });
+  viewReplay(shareUrl, id) {
+    const url = shareUrl || chrome.runtime.getURL(`replay.html?id=${id}`);
+    chrome.tabs.create({ url });
+  }
+
+  async copyLink(shareUrl, id) {
+    const url = shareUrl || chrome.runtime.getURL(`replay.html?id=${id}`);
+    await navigator.clipboard.writeText(url);
+    const btn = document.querySelector(`.copy-btn[data-id="${id}"]`);
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    }
   }
 
   async deleteRecording(id) {
