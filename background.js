@@ -7,10 +7,8 @@ class RecordingManager {
     this.gistUploader = new GistUploader();
     this.urlShortener = new URLShortener();
     this.jsonBlobStorage = new JsonBlobStorage();
-    // GitHub Pages URL for external sharing (Gist/JSONBlob - works without extension)
-    this.replayBaseUrl = 'https://marthur3.github.io/humanitybadge/replay.html';
-    // Local extension URL for hash-encoded replays (always works, data is self-contained)
-    this.localReplayUrl = chrome.runtime.getURL('replay.html');
+    // Hosted replay viewer — works for anyone, no extension needed
+    this.replayBaseUrl = 'https://humanitype.netlify.app';
     this.init();
   }
 
@@ -136,7 +134,7 @@ class RecordingManager {
 
       if (gistResult.success) {
         const gistId = gistResult.gistId;
-        const githubPagesUrl = `${this.localReplayUrl}?gist=${gistId}`;
+        const githubPagesUrl = `${this.replayBaseUrl}?gist=${gistId}`;
 
         console.log('GitHub Gist upload successful. Gist ID:', gistId);
 
@@ -158,7 +156,7 @@ class RecordingManager {
     const blobResult = await this.jsonBlobStorage.store(recordingData);
 
     if (blobResult.success) {
-      const blobUrl = `${this.localReplayUrl}?blob=${blobResult.blobId}`;
+      const blobUrl = `${this.replayBaseUrl}?blob=${blobResult.blobId}`;
 
       // Try to shorten the blob URL with is.gd (it's short enough now ~80 chars)
       const shortResult = await this.urlShortener.shortenUrl(blobUrl);
@@ -180,7 +178,7 @@ class RecordingManager {
     // TIER 3: Use hash-encoded URL with local extension replay page (always works)
     if (recordingSize < 500000) {
       const encoded = this.encodeRecording(recordingData);
-      const localUrl = `${this.localReplayUrl}#data=${encoded}`;
+      const localUrl = `${this.replayBaseUrl}#data=${encoded}`;
 
       return {
         shareUrl: localUrl,
