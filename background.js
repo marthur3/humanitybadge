@@ -136,7 +136,7 @@ class RecordingManager {
 
       if (gistResult.success) {
         const gistId = gistResult.gistId;
-        const githubPagesUrl = `${this.replayBaseUrl}?gist=${gistId}`;
+        const githubPagesUrl = `${this.localReplayUrl}?gist=${gistId}`;
 
         console.log('GitHub Gist upload successful. Gist ID:', gistId);
 
@@ -158,7 +158,7 @@ class RecordingManager {
     const blobResult = await this.jsonBlobStorage.store(recordingData);
 
     if (blobResult.success) {
-      const blobUrl = `${this.replayBaseUrl}?blob=${blobResult.blobId}`;
+      const blobUrl = `${this.localReplayUrl}?blob=${blobResult.blobId}`;
 
       // Try to shorten the blob URL with is.gd (it's short enough now ~80 chars)
       const shortResult = await this.urlShortener.shortenUrl(blobUrl);
