@@ -343,7 +343,8 @@ class TypingRecorder {
   }
 
   saveRecording() {
-    chrome.runtime.sendMessage({ action: 'saveRecording', data: this.recording }, (response) => {
+    try {
+      chrome.runtime.sendMessage({ action: 'saveRecording', data: this.recording }, (response) => {
       if (chrome.runtime.lastError) {
         const msg = chrome.runtime.lastError.message;
         if (msg.includes('Extension context invalidated')) {
@@ -364,6 +365,11 @@ class TypingRecorder {
         if (doneBtn) { doneBtn.textContent = 'Verify & Get Badge'; doneBtn.disabled = false; }
       }
     });
+    } catch (e) {
+      this.showMessage('Extension reloaded — please refresh the page.', '#f29900');
+      const doneBtn = this.modal && this.modal.querySelector('#hb-done-btn');
+      if (doneBtn) { doneBtn.textContent = 'Verify & Get Badge'; doneBtn.disabled = false; }
+    }
   }
 
   showResultScreen(response) {
@@ -538,14 +544,18 @@ class TypingRecorder {
   }
 
   listenForMessages() {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.action === 'getStatus') {
-        sendResponse({ isRecording: this.isRecording });
-      } else if (message.action === 'toggleExtension') {
-        this.handleToggle(message.enabled);
-        sendResponse({ success: true });
-      }
-    });
+    try {
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === 'getStatus') {
+          sendResponse({ isRecording: this.isRecording });
+        } else if (message.action === 'toggleExtension') {
+          this.handleToggle(message.enabled);
+          sendResponse({ success: true });
+        }
+      });
+    } catch (e) {
+      // Extension context invalidated — page needs refresh
+    }
   }
 
   handleToggle(enabled) {
