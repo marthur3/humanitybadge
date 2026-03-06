@@ -7,8 +7,10 @@ class RecordingManager {
     this.gistUploader = new GistUploader();
     this.urlShortener = new URLShortener();
     this.jsonBlobStorage = new JsonBlobStorage();
-    // GitHub Pages URL for universal replay viewing (works without extension)
+    // GitHub Pages URL for external sharing (Gist/JSONBlob - works without extension)
     this.replayBaseUrl = 'https://marthur3.github.io/humanitybadge/replay.html';
+    // Local extension URL for hash-encoded replays (always works, data is self-contained)
+    this.localReplayUrl = chrome.runtime.getURL('replay.html');
     this.init();
   }
 
@@ -175,29 +177,13 @@ class RecordingManager {
       console.warn('JSONBlob storage failed:', blobResult.error);
     }
 
-    // TIER 3: Try is.gd URL shortening for hash-encoded URLs
+    // TIER 3: Use hash-encoded URL with local extension replay page (always works)
     if (recordingSize < 500000) {
       const encoded = this.encodeRecording(recordingData);
-      const longUrl = `${this.replayBaseUrl}#data=${encoded}`;
+      const localUrl = `${this.localReplayUrl}#data=${encoded}`;
 
-      const canShorten = this.urlShortener.canShorten(longUrl);
-      if (canShorten.canShorten) {
-        console.log('Attempting is.gd URL shortening...');
-        const shortResult = await this.urlShortener.shortenUrl(longUrl);
-
-        if (shortResult.success) {
-          return {
-            shareUrl: shortResult.shortUrl,
-            shareType: 'is.gd-short',
-            recordingSize: recordingSize,
-            htmlExport: htmlExport
-          };
-        }
-      }
-
-      // TIER 4: Use hash-encoded URL directly
       return {
-        shareUrl: longUrl,
+        shareUrl: localUrl,
         shareType: recordingSize < 50000 ? 'hash' : 'hash-large',
         recordingSize: recordingSize,
         htmlExport: htmlExport
