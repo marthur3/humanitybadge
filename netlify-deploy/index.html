@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Humanity Badge — Typing Replay</title>
+  <meta property="og:title" content="Humanity Badge — Verified Human Typing">
+  <meta property="og:description" content="Watch this authenticated human typing replay, verified by Humanity Badge.">
+  <style>
+    :root {
+      --blue: #1a73e8;
+      --blue-dark: #1557b0;
+      --green: #1e8e3e;
+      --red: #d93025;
+      --grey-50: #f8f9fa;
+      --grey-100: #f1f3f4;
+      --grey-200: #e8eaed;
+      --grey-300: #dadce0;
+      --grey-500: #9aa0a6;
+      --grey-700: #5f6368;
+      --grey-900: #202124;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--grey-50);
+      min-height: 100vh;
+      padding: 24px 16px;
+      color: var(--grey-900);
+    }
+
+    .card {
+      max-width: 700px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(60,64,67,.15), 0 4px 12px rgba(60,64,67,.1);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .hdr {
+      background: var(--blue);
+      color: white;
+      padding: 20px 24px;
+    }
+    .hdr-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .hdr-badge {
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.2);
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+    .hdr h1 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .hdr-meta {
+      font-size: 13px;
+      opacity: 0.85;
+      display: flex;
+      gap: 16px;
+    }
+
+    /* Controls */
+    .controls {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--grey-200);
+      background: white;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--blue-dark); }
+    .btn-secondary { background: var(--grey-100); color: var(--grey-700); }
+    .btn-secondary:hover:not(:disabled) { background: var(--grey-200); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .speed-wrap {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--grey-700);
+    }
+    .speed-wrap select {
+      padding: 5px 8px;
+      border: 1px solid var(--grey-300);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--grey-900);
+      background: white;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      padding: 12px 20px 8px;
+      border-bottom: 1px solid var(--grey-100);
+    }
+    .progress-bar {
+      height: 5px;
+      background: var(--grey-200);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    #progress-fill {
+      height: 100%;
+      background: var(--blue);
+      width: 0%;
+      transition: width 0.08s linear;
+    }
+    .progress-time {
+      font-size: 11px;
+      color: var(--grey-500);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Replay area */
+    .replay-area {
+      padding: 20px;
+      background: var(--grey-50);
+    }
+    #replay-textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px 16px;
+      border: 1px solid var(--grey-300);
+      border-radius: 8px;
+      font-family: 'SFMono-Regular', 'Consolas', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      background: white;
+      color: var(--grey-900);
+      outline: none;
+    }
+
+    /* Stats */
+    .stats {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid var(--grey-200);
+    }
+    .stat { text-align: center; }
+    .stat-label {
+      font-size: 10px;
+      color: var(--grey-500);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--grey-900);
+    }
+
+    /* Error / Loading */
+    .status-box {
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .status-box.error {
+      background: #fce8e6;
+      color: var(--red);
+    }
+    .status-box h2 { font-size: 18px; margin-bottom: 8px; }
+    .status-box p { font-size: 14px; opacity: 0.8; }
+
+    .loading-spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--grey-200);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes blink { 0%,50%{opacity:1} 51%,100%{opacity:0} }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="status-box" id="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading replay…</p>
+    </div>
+  </div>
+
+  <script>
+  // ── JSONBlob helper ───────────────────────────────────────────────────────
+  async function loadFromBlob(blobId) {
+    const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
+      headers: { Accept: 'application/json' }
+    });
+    if (!res.ok) throw new Error(`JSONBlob ${res.status}`);
+    return res.json();
+  }
+
+  // ── GitHub Gist helper ────────────────────────────────────────────────────
+  async function loadFromGist(gistId) {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`);
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const data = await res.json();
+    const file = Object.values(data.files)[0];
+    const m = file.content.match(/<script[^>]*id="recording-data"[^>]*>([\s\S]*?)<\/script>/);
+    if (!m) throw new Error('Recording data not found in Gist');
+    return JSON.parse(m[1].trim());
+  }
+
+  // ── Hash helper ───────────────────────────────────────────────────────────
+  function loadFromHash() {
+    const h = window.location.hash;
+    if (!h.startsWith('#data=')) return null;
+    const json = decodeURIComponent(escape(atob(h.slice(6))));
+    return JSON.parse(json);
+  }
+
+  // ── Main init ─────────────────────────────────────────────────────────────
+  async function init() {
+    const p = new URLSearchParams(window.location.search);
+    let recording = null;
+
+    try {
+      if (p.get('blob'))  recording = await loadFromBlob(p.get('blob'));
+      else if (p.get('gist')) recording = await loadFromGist(p.get('gist'));
+      else recording = loadFromHash();
+    } catch (e) {
+      showError('Could not load recording', e.message);
+      return;
+    }
+
+    if (!recording) {
+      showError('No recording found', 'The link may be expired or invalid.');
+      return;
+    }
+
+    renderPlayer(recording);
+  }
+
+  // ── Render player ─────────────────────────────────────────────────────────
+  function renderPlayer(rec) {
+    const v = rec.verification || {};
+    const dur = Math.round((rec.duration || 0) / 1000);
+
+    document.getElementById('card').innerHTML = `
+      <div class="hdr">
+        <div class="hdr-top">
+          <span class="hdr-badge">${v.isAuthentic ? '✓ Verified Human' : '✗ Unverified'}</span>
+        </div>
+        <h1>Humanity Badge — Typing Replay</h1>
+        <div class="hdr-meta">
+          ${v.wpm ? `<span>${v.wpm} WPM</span>` : ''}
+          ${dur ? `<span>${dur}s</span>` : ''}
+          ${v.words ? `<span>${v.words} words</span>` : ''}
+          ${rec.domain ? `<span>from ${rec.domain}</span>` : ''}
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-primary" id="play-btn">▶ Play</button>
+        <button class="btn btn-secondary" id="pause-btn" disabled>⏸ Pause</button>
+        <button class="btn btn-secondary" id="reset-btn">↺ Reset</button>
+        <div class="speed-wrap">
+          Speed:
+          <select id="speed-select">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <div class="progress-time">
+          <span id="cur-time">0s</span>
+          <span>${dur}s</span>
+        </div>
+      </div>
+
+      <div class="replay-area">
+        <textarea id="replay-textarea" readonly></textarea>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Characters</div><div class="stat-value" id="s-chars">0</div></div>
+        <div class="stat"><div class="stat-label">Words</div><div class="stat-value" id="s-words">0</div></div>
+        <div class="stat"><div class="stat-label">WPM</div><div class="stat-value" id="s-wpm">${v.wpm || 0}</div></div>
+      </div>
+    `;
+
+    new Player(rec);
+  }
+
+  // ── Player class ──────────────────────────────────────────────────────────
+  class Player {
+    constructor(rec) {
+      this.rec = rec;
+      this.idx = 0;
+      this.playing = false;
+      this.paused = false;
+      this.startTime = null;
+      this.pausedAt = 0;
+      this.speed = 1;
+
+      this.ta = document.getElementById('replay-textarea');
+      this.fill = document.getElementById('progress-fill');
+      this.ta.value = rec.initialValue || '';
+      this.updateStats();
+
+      document.getElementById('play-btn').onclick  = () => this.play();
+      document.getElementById('pause-btn').onclick = () => this.pause();
+      document.getElementById('reset-btn').onclick = () => this.reset();
+      document.getElementById('speed-select').onchange = e => { this.speed = +e.target.value; };
+    }
+
+    play() {
+      this.playing = true;
+      this.paused  = false;
+      this.startTime = Date.now() - this.pausedAt;
+      document.getElementById('play-btn').disabled  = true;
+      document.getElementById('pause-btn').disabled = false;
+      this.loop();
+    }
+
+    pause() {
+      this.paused   = true;
+      this.playing  = false;
+      this.pausedAt = Date.now() - this.startTime;
+      document.getElementById('play-btn').disabled  = false;
+      document.getElementById('pause-btn').disabled = true;
+    }
+
+    reset() {
+      this.playing = false;
+      this.paused  = false;
+      this.idx     = 0;
+      this.pausedAt = 0;
+      this.startTime = null;
+      this.ta.value  = this.rec.initialValue || '';
+      this.fill.style.width = '0%';
+      document.getElementById('cur-time').textContent = '0s';
+      document.getElementById('play-btn').disabled  = false;
+      document.getElementById('pause-btn').disabled = true;
+      this.updateStats();
+    }
+
+    loop() {
+      if (!this.playing || this.paused) return;
+      const elapsed = (Date.now() - this.startTime) * this.speed;
+      const events  = this.rec.events;
+
+      while (this.idx < events.length && events[this.idx].timestamp <= elapsed) {
+        const ev = events[this.idx++];
+        if (ev.type === 'input' && ev.value !== undefined) this.ta.value = ev.value;
+      }
+
+      const pct = Math.min(elapsed / this.rec.duration * 100, 100);
+      this.fill.style.width = pct + '%';
+      document.getElementById('cur-time').textContent = Math.round(elapsed / 1000) + 's';
+      this.updateStats();
+
+      if (this.idx >= events.length) {
+        this.playing = false;
+        document.getElementById('play-btn').disabled  = false;
+        document.getElementById('pause-btn').disabled = true;
+        return;
+      }
+      requestAnimationFrame(() => this.loop());
+    }
+
+    updateStats() {
+      const text = this.ta.value;
+      const words = text.trim().split(/\s+/).filter(w => w).length;
+      document.getElementById('s-chars').textContent = text.length;
+      document.getElementById('s-words').textContent = words;
+    }
+  }
+
+  function showError(title, detail) {
+    document.getElementById('card').innerHTML = `
+      <div class="status-box error">
+        <h2>${title}</h2>
+        <p>${detail || ''}</p>
+      </div>`;
+  }
+
+  init();
+  </script>
+</body>
+</html>
