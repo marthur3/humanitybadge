@@ -1,6 +1,6 @@
 {
   "name": "humanity-badge-extension",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Browser extension for verifying authentic human typing with anti-paste protection",
   "main": "content.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "test:integration": "node tests/integration.test.js",
     "test:all": "npm run test && npm run test:integration",
     "lint": "eslint *.js tests/*.js --fix",
-    "build": "zip -r humanity-badge-extension.zip . -x '*.git*' '*.DS_Store*' 'tests/*' 'node_modules/*' 'package*.json'",
+    "build": "zip -r humanity-badge-extension.zip . -x '*.git*' '*.DS_Store*' 'tests/*' 'node_modules/*' 'package*.json' '.claude/*' 'CLAUDE.md' '*.zip' 'test-manifest.json'",
     "dev": "echo 'Load unpacked extension from current directory in Chrome'"
   },
   "keywords": [

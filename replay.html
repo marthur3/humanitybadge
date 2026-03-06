@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Typing Replay</title>
+  <title>Humanity Badge - Typing Replay</title>
   <link rel="stylesheet" href="replay.css">
 </head>
 <body>
   <div class="replay-container">
     <header class="replay-header">
-      <h1>🎬 Typing Replay</h1>
+      <h1>Humanity Badge - Typing Replay</h1>
       <div class="replay-info">
         <span id="site-info"></span>
         <span id="duration-info"></span>
@@ -16,9 +16,9 @@
     </header>
 
     <div class="replay-controls">
-      <button id="play-btn">▶️ Play</button>
-      <button id="pause-btn" disabled>⏸️ Pause</button>
-      <button id="reset-btn">⏹️ Reset</button>
+      <button id="play-btn">Play</button>
+      <button id="pause-btn" disabled>Pause</button>
+      <button id="reset-btn">Reset</button>
       <div class="speed-controls">
         <label>Speed:</label>
         <select id="speed-select">
@@ -49,24 +49,23 @@
 
     <div class="replay-stats">
       <div class="stat">
-        <label>Characters:</label>
+        <label>Characters</label>
         <span id="char-count">0</span>
       </div>
       <div class="stat">
-        <label>Words:</label>
+        <label>Words</label>
         <span id="word-count">0</span>
       </div>
       <div class="stat">
-        <label>WPM:</label>
+        <label>WPM</label>
         <span id="wpm">0</span>
       </div>
     </div>
 
     <footer class="replay-footer">
-      <p>Share this replay: <input type="text" id="share-url" readonly></p>
-      <button id="copy-link-btn">
-        Copy Link
-      </button>
+      <p>Share:</p>
+      <input type="text" id="share-url" readonly>
+      <button id="copy-link-btn">Copy Link</button>
     </footer>
   </div>
 

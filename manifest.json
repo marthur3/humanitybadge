@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Humanity Badge - Verified Human Typing",
-  "version": "2.0",
-  "description": "Verify authentic human typing with anti-paste protection and Humanity Badge certification for Reddit posts and comments",
+  "version": "2.1",
+  "description": "Verify authentic human typing with anti-paste protection and Humanity Badge certification",
+  "homepage_url": "https://github.com/marthur3/humanitybadge",
   "permissions": [
     "storage",
     "activeTab",
@@ -12,7 +13,9 @@
   ],
   "host_permissions": [
     "https://api.github.com/*",
-    "https://is.gd/*"
+    "https://github.com/*",
+    "https://is.gd/*",
+    "https://jsonblob.com/*"
   ],
   "content_scripts": [
     {
@@ -28,7 +31,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Typing Replay Recorder"
+    "default_title": "Humanity Badge"
   },
   "options_page": "settings.html",
   "web_accessible_resources": [

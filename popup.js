@@ -11,16 +11,13 @@ class PopupManager {
     this.updateStatus();
     this.loadRecordings();
 
-    // Refresh status every 2 seconds
     setInterval(() => this.updateStatus(), 2000);
   }
 
   async checkOnboarding() {
     try {
       const result = await chrome.storage.sync.get(['hasSeenOnboarding']);
-
       if (!result.hasSeenOnboarding) {
-        // First time user - open onboarding
         const onboardingUrl = chrome.runtime.getURL('onboarding.html');
         chrome.tabs.create({ url: onboardingUrl });
       }
@@ -36,64 +33,34 @@ class PopupManager {
       const hasManual = !!(result.githubToken && result.githubToken.trim());
       const hasGitHub = hasOAuth || hasManual;
 
-      // Add GitHub status indicator to popup
-      const statusContainer = document.querySelector('.toggle-section');
-      if (statusContainer && !document.getElementById('github-status-indicator')) {
-        const indicator = document.createElement('div');
-        indicator.id = 'github-status-indicator';
-        indicator.style.cssText = `
-          margin-top: 15px;
-          padding: 12px;
-          border-radius: 6px;
-          font-size: 13px;
-          background: ${hasGitHub ? '#e8f5e8' : '#fff3e0'};
-          border: 1px solid ${hasGitHub ? '#c8e6c9' : '#ffe0b2'};
-          color: ${hasGitHub ? '#2e7d32' : '#f57c00'};
+      const card = document.getElementById('github-status-card');
+      const container = document.getElementById('github-connection');
+      card.style.display = 'block';
+
+      if (hasGitHub) {
+        container.innerHTML = `
+          <div class="connection-icon connected">G</div>
+          <div class="connection-info">
+            <div class="connection-title">GitHub Connected</div>
+            <div class="connection-subtitle">Using professional Gist URLs</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="connection-icon disconnected">G</div>
+          <div class="connection-info">
+            <div class="connection-title">GitHub not connected</div>
+            <div class="connection-subtitle">Using JSONBlob for sharing</div>
+          </div>
+          <button class="connection-action" id="connect-github-link">Connect</button>
         `;
 
-        if (hasGitHub) {
-          indicator.innerHTML = `
-            <strong>✓ GitHub Connected</strong><br>
-            <span style="font-size: 12px;">Your recordings will use professional Gist URLs</span>
-          `;
-        } else if (result.githubSkipped) {
-          indicator.innerHTML = `
-            <strong>Using is.gd URLs</strong><br>
-            <span style="font-size: 12px;">
-              <a href="#" id="connect-github-link" style="color: #f57c00; text-decoration: underline;">Connect GitHub</a> for better URLs
-            </span>
-          `;
-
-          // Add click listener for connect link
-          setTimeout(() => {
-            document.getElementById('connect-github-link')?.addEventListener('click', (e) => {
-              e.preventDefault();
-              chrome.runtime.openOptionsPage();
-            });
-          }, 100);
-        } else {
-          indicator.innerHTML = `
-            <strong>Setup Incomplete</strong><br>
-            <span style="font-size: 12px;">
-              <a href="#" id="connect-github-link" style="color: #f57c00; text-decoration: underline;">Connect GitHub</a> or <a href="#" id="skip-github-link" style="color: #f57c00; text-decoration: underline;">skip</a>
-            </span>
-          `;
-
-          // Add click listeners
-          setTimeout(() => {
-            document.getElementById('connect-github-link')?.addEventListener('click', (e) => {
-              e.preventDefault();
-              chrome.runtime.openOptionsPage();
-            });
-            document.getElementById('skip-github-link')?.addEventListener('click', async (e) => {
-              e.preventDefault();
-              await chrome.storage.sync.set({ githubSkipped: true });
-              window.location.reload();
-            });
-          }, 100);
-        }
-
-        statusContainer.appendChild(indicator);
+        setTimeout(() => {
+          document.getElementById('connect-github-link')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            chrome.runtime.openOptionsPage();
+          });
+        }, 50);
       }
     } catch (error) {
       console.error('Error showing GitHub status:', error);
@@ -101,12 +68,9 @@ class PopupManager {
   }
 
   setupSettingsButton() {
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn) {
-      settingsBtn.addEventListener('click', () => {
-        chrome.runtime.openOptionsPage();
-      });
-    }
+    document.getElementById('settings-btn')?.addEventListener('click', () => {
+      chrome.runtime.openOptionsPage();
+    });
   }
 
   async setupToggle() {
@@ -122,7 +86,6 @@ class PopupManager {
       await chrome.storage.sync.set({ extensionEnabled: enabled });
       this.updateToggleStatus(enabled);
 
-      // Notify active tab
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         await chrome.tabs.sendMessage(tab.id, {
@@ -137,10 +100,7 @@ class PopupManager {
 
   updateToggleStatus(enabled) {
     const status = document.getElementById('toggle-status');
-    status.innerHTML = enabled
-      ? '✅ Active - Button appears on all sites'
-      : '❌ Disabled - No button will appear';
-    status.style.color = enabled ? '#2e7d32' : '#c62828';
+    status.textContent = enabled ? 'Recording on all websites' : 'Extension disabled';
   }
 
   async updateStatus() {
@@ -150,17 +110,16 @@ class PopupManager {
 
       const statusEl = document.getElementById('status');
       if (response && response.isRecording) {
-        statusEl.className = 'status recording';
-        statusEl.textContent = '🔴 Recording in progress...';
+        statusEl.className = 'status-bar recording';
+        statusEl.innerHTML = '<span class="status-dot"></span> Recording in progress...';
       } else {
-        statusEl.className = 'status idle';
-        statusEl.textContent = '✅ Ready to record';
+        statusEl.className = 'status-bar idle';
+        statusEl.innerHTML = '<span class="status-dot"></span> Ready to record';
       }
     } catch (error) {
-      // Tab doesn't have content script
       const statusEl = document.getElementById('status');
-      statusEl.className = 'status idle';
-      statusEl.textContent = '✅ Ready to record';
+      statusEl.className = 'status-bar idle';
+      statusEl.innerHTML = '<span class="status-dot"></span> Ready to record';
     }
   }
 
@@ -175,20 +134,22 @@ class PopupManager {
     if (recordings.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          No recordings yet. Click the green ✓ button on any site to start recording!
+          <div class="empty-state-icon">H</div>
+          <div class="empty-state-text">No recordings yet.<br>Click the H button on any page to start.</div>
         </div>
       `;
       return;
     }
 
-    const html = recordings
-      .sort((a, b) => b.startTime - a.startTime)
-      .map(rec => this.createRecordingHtml(rec))
-      .join('');
+    const html = '<div class="recordings-list">' +
+      recordings
+        .sort((a, b) => b.startTime - a.startTime)
+        .map(rec => this.createRecordingHtml(rec))
+        .join('') +
+      '</div>';
 
     container.innerHTML = html;
 
-    // Event delegation
     container.addEventListener('click', (e) => {
       const id = e.target.dataset.id;
       if (!id) return;
@@ -204,24 +165,25 @@ class PopupManager {
   }
 
   createRecordingHtml(rec) {
-    const date = new Date(rec.startTime).toLocaleString();
+    const date = new Date(rec.startTime).toLocaleDateString(undefined, {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
     const duration = Math.round(rec.duration / 1000);
-    const preview = rec.finalValue.substring(0, 50) + (rec.finalValue.length > 50 ? '...' : '');
+    const preview = (rec.finalValue || '').substring(0, 60) + ((rec.finalValue || '').length > 60 ? '...' : '');
+    const verified = rec.verification && rec.verification.isAuthentic;
 
     return `
       <div class="recording-item">
-        <div class="recording-header">
-          <div class="recording-title">${rec.domain}</div>
-          <div class="recording-date">${date}</div>
+        <div class="recording-top">
+          <span class="recording-domain">${verified ? 'Verified' : 'Unverified'} &middot; ${rec.domain}</span>
+          <span class="recording-date">${date}</span>
         </div>
-        <div class="recording-details">
-          Duration: ${duration}s | Characters: ${rec.finalValue.length}<br>
-          Preview: "${preview}"
-        </div>
+        <div class="recording-preview">"${preview}"</div>
+        <div class="recording-meta">${duration}s &middot; ${(rec.finalValue || '').length} chars${rec.verification?.wpm ? ' &middot; ' + rec.verification.wpm + ' WPM' : ''}</div>
         <div class="recording-actions">
-          <button class="btn btn-primary share-btn" data-id="${rec.id}">View Replay</button>
-          <button class="btn btn-secondary copy-btn" data-id="${rec.id}">Copy Link</button>
-          <button class="btn btn-danger delete-btn" data-id="${rec.id}">Delete</button>
+          <button class="btn btn-primary share-btn" data-id="${rec.id}">View</button>
+          <button class="btn btn-outline copy-btn" data-id="${rec.id}">Copy Link</button>
+          <button class="btn btn-danger-outline delete-btn" data-id="${rec.id}">Delete</button>
         </div>
       </div>
     `;
@@ -243,8 +205,7 @@ class PopupManager {
   }
 
   async deleteRecording(id) {
-    if (!confirm('Delete this recording? This action cannot be undone.')) return;
-
+    if (!confirm('Delete this recording?')) return;
     await chrome.runtime.sendMessage({ action: 'deleteRecording', id });
     this.loadRecordings();
   }

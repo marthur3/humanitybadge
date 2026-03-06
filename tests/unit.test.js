@@ -3,27 +3,35 @@
 
 class MockChrome {
   constructor() {
+    this.storage = {
+      sync: {
+        get: (keys) => Promise.resolve({}),
+        set: (data) => Promise.resolve()
+      },
+      local: {
+        get: (keys) => Promise.resolve({}),
+        set: (data) => Promise.resolve()
+      }
+    };
     this.runtime = {
       sendMessage: (message, callback) => {
-        console.log('Mock chrome.runtime.sendMessage called:', message);
         if (callback) {
           setTimeout(() => callback({ success: true, shareUrl: 'test://url' }), 10);
         }
       },
       onMessage: {
-        addListener: (listener) => {
-          console.log('Mock chrome.runtime.onMessage.addListener called');
-        }
-      }
+        addListener: () => {}
+      },
+      lastError: null
     };
   }
 }
 
-// Mock DOM environment
 class MockDOM {
   constructor() {
     this.elements = new Map();
     this.eventListeners = new Map();
+    this._head = this.createElement('head');
   }
 
   createElement(tagName) {
@@ -31,27 +39,18 @@ class MockDOM {
       tagName: tagName.toLowerCase(),
       innerHTML: '',
       className: '',
-      style: {},
+      style: { cssText: '' },
       dataset: {},
-      appendChild: (child) => {},
+      appendChild: () => {},
       addEventListener: (event, listener, options) => {
         const key = `${element.id || 'element'}_${event}`;
         this.eventListeners.set(key, listener);
       },
-      removeEventListener: (event, listener) => {
-        const key = `${element.id || 'element'}_${event}`;
-        this.eventListeners.delete(key);
-      },
-      getBoundingClientRect: () => ({
-        width: 200,
-        height: 100,
-        top: 0,
-        left: 0
-      }),
-      parentNode: {
-        insertBefore: (newElement, refElement) => {}
-      },
-      closest: (selector) => null,
+      removeEventListener: () => {},
+      remove: () => {},
+      getBoundingClientRect: () => ({ width: 200, height: 100, top: 0, left: 0 }),
+      parentNode: { insertBefore: () => {} },
+      closest: () => null,
       offsetParent: {},
       value: '',
       textContent: '',
@@ -67,7 +66,6 @@ class MockDOM {
   }
 
   querySelectorAll(selector) {
-    // Mock some common selectors
     if (selector.includes('textarea')) {
       const textarea = this.createElement('textarea');
       textarea.id = 'test-textarea';
@@ -76,18 +74,21 @@ class MockDOM {
     return [];
   }
 
+  get head() { return this._head; }
+
   get body() {
     if (!this._body) {
       this._body = this.createElement('body');
       this._body.appendChild = (element) => {
-        this.elements.set(element.id, element);
+        if (element.id) this.elements.set(element.id, element);
       };
     }
     return this._body;
   }
+
+  get readyState() { return 'complete'; }
 }
 
-// Mock window and global objects
 global.window = {
   location: {
     hostname: 'reddit.com',
@@ -102,8 +103,10 @@ global.window = {
 
 global.document = new MockDOM();
 global.chrome = new MockChrome();
+global.navigator = { clipboard: { writeText: () => Promise.resolve() } };
+global.URL = { createObjectURL: () => 'blob://test', revokeObjectURL: () => {} };
+global.Blob = class { constructor() {} };
 
-// Test Suite
 class TestSuite {
   constructor() {
     this.tests = [];
@@ -117,7 +120,7 @@ class TestSuite {
 
   async run() {
     console.log('\n🧪 Running Unit Tests for Humanity Badge Extension\n');
-    
+
     for (const { name, testFn } of this.tests) {
       try {
         await testFn();
@@ -130,7 +133,7 @@ class TestSuite {
     }
 
     console.log(`\n📊 Test Results: ${this.passed} passed, ${this.failed} failed`);
-    
+
     if (this.failed > 0) {
       process.exit(1);
     }
@@ -141,281 +144,230 @@ class TestSuite {
 const fs = require('fs');
 const path = require('path');
 
-// Read and evaluate the content.js file in a safe way
 const contentJsPath = path.join(__dirname, '..', 'content.js');
 let TypingRecorder;
 
 try {
   const contentJs = fs.readFileSync(contentJsPath, 'utf8');
-  // Extract the entire class definition including all methods
-  const classMatch = contentJs.match(/class TypingRecorder \{[\s\S]*?(?=\n\n\/\/|\nnew TypingRecorder|\n$)/);
-  if (classMatch) {
-    // Create a safe evaluation context
-    const classCode = classMatch[0];
-    eval(classCode);
-    global.TypingRecorder = TypingRecorder;
-  } else {
-    throw new Error('Could not extract TypingRecorder class');
-  }
+  // Remove the auto-instantiation at the end and wrap in a function that returns the class
+  const codeWithoutInstantiation = contentJs
+    .replace(/if \(document\.readyState[\s\S]*$/, '')
+    .replace(/new TypingRecorder\(\);?\s*$/, '');
+  // Use Function constructor to get the class out
+  const wrappedCode = codeWithoutInstantiation + '\nreturn TypingRecorder;';
+  TypingRecorder = new Function(wrappedCode)();
+  global.TypingRecorder = TypingRecorder;
 } catch (error) {
   console.error('Failed to load TypingRecorder class:', error.message);
-  console.log('Trying alternative extraction...');
-  
-  try {
-    const contentJs = fs.readFileSync(contentJsPath, 'utf8');
-    // Remove the instantiation line at the end
-    const codeWithoutInstantiation = contentJs.replace(/new TypingRecorder\(\);?\s*$/, '');
-    eval(codeWithoutInstantiation);
-    global.TypingRecorder = TypingRecorder;
-  } catch (altError) {
-    console.error('Alternative loading also failed:', altError.message);
-    process.exit(1);
-  }
+  process.exit(1);
 }
 
-// Test Suite Setup
 const suite = new TestSuite();
 
 suite.test('TypingRecorder class initialization', () => {
   const recorder = new TypingRecorder();
-  
+
   if (recorder.isRecording !== false) {
     throw new Error('isRecording should be false initially');
   }
-  
-  if (recorder.currentRecording !== null) {
-    throw new Error('currentRecording should be null initially');
+
+  if (recorder.recording !== null) {
+    throw new Error('recording should be null initially');
   }
-  
+
   if (recorder.currentElement !== null) {
     throw new Error('currentElement should be null initially');
+  }
+
+  if (recorder.enabled !== true) {
+    throw new Error('enabled should be true initially');
   }
 });
 
 suite.test('Reddit domain detection', () => {
-  // Test Reddit domain detection
   global.window.location.hostname = 'reddit.com';
-  const recorder = new TypingRecorder();
-  
-  // This would normally be called in attachToTextAreas
   const isReddit = global.window.location.hostname.includes('reddit.com');
-  
+
   if (!isReddit) {
     throw new Error('Should detect reddit.com as Reddit domain');
   }
-  
-  // Test non-Reddit domain
+
   global.window.location.hostname = 'example.com';
   const isNotReddit = global.window.location.hostname.includes('reddit.com');
-  
+
   if (isNotReddit) {
     throw new Error('Should not detect example.com as Reddit domain');
   }
+
+  // Reset
+  global.window.location.hostname = 'reddit.com';
 });
 
-suite.test('Element validation logic', () => {
+suite.test('findInputElement returns valid textarea', () => {
   const recorder = new TypingRecorder();
-  
-  // Test valid element
-  const validElement = global.document.createElement('textarea');
-  validElement.getBoundingClientRect = () => ({
-    width: 200,
-    height: 100
-  });
-  validElement.disabled = false;
-  validElement.readOnly = false;
-  validElement.offsetParent = {};
-  
-  // Mock window.getComputedStyle
-  global.window.getComputedStyle = () => ({ visibility: 'visible' });
-  
-  const isValid = recorder.isValidTextArea(validElement);
-  
-  if (!isValid) {
-    throw new Error('Valid textarea should pass validation');
+  const element = recorder.findInputElement();
+
+  if (!element) {
+    throw new Error('Should find a textarea element');
   }
-  
-  // Test invalid element (too small)
-  const invalidElement = global.document.createElement('textarea');
-  invalidElement.getBoundingClientRect = () => ({
-    width: 10,
-    height: 5
-  });
-  
-  const isInvalid = recorder.isValidTextArea(invalidElement);
-  
-  if (isInvalid) {
-    throw new Error('Invalid textarea should fail validation');
+
+  if (element.tagName !== 'textarea') {
+    throw new Error('Found element should be a textarea');
   }
 });
 
-suite.test('Paste prevention system', () => {
+suite.test('Paste prevention in handleEvent', () => {
   const recorder = new TypingRecorder();
-  let pasteBlocked = false;
-  
-  // Mock showPasteBlockedMessage
-  recorder.showPasteBlockedMessage = () => {
-    pasteBlocked = true;
-  };
-  
-  // Simulate paste event
-  const mockEvent = {
+  recorder.isRecording = true;
+  let prevented = false;
+
+  const mockPasteEvent = {
     type: 'paste',
-    preventDefault: () => {},
+    preventDefault: () => { prevented = true; },
     stopPropagation: () => {}
   };
-  
-  // This would normally be called in addEventListeners
-  if (mockEvent.type === 'paste') {
-    mockEvent.preventDefault();
-    mockEvent.stopPropagation();
-    recorder.showPasteBlockedMessage();
-  }
-  
-  if (!pasteBlocked) {
-    throw new Error('Paste event should be blocked');
+
+  recorder.handleEvent(mockPasteEvent);
+
+  if (!prevented) {
+    throw new Error('Paste event should be prevented');
   }
 });
 
-suite.test('WPM calculation accuracy', () => {
+suite.test('Keyboard paste (Ctrl+V) prevention', () => {
   const recorder = new TypingRecorder();
-  
-  // Mock recording data
-  recorder.currentRecording = {
+  recorder.isRecording = true;
+  let prevented = false;
+
+  const mockCtrlV = {
+    type: 'keydown',
+    ctrlKey: true,
+    metaKey: false,
+    key: 'v',
+    preventDefault: () => { prevented = true; },
+    stopPropagation: () => {}
+  };
+
+  recorder.handleEvent(mockCtrlV);
+
+  if (!prevented) {
+    throw new Error('Ctrl+V should be prevented');
+  }
+});
+
+suite.test('Verification - WPM calculation', () => {
+  const recorder = new TypingRecorder();
+  // 40 words typed over 60 seconds = 40 WPM
+  const words = Array(40).fill('word').join(' ');
+  recorder.recording = {
     events: [
       { type: 'keydown', timestamp: 0 },
       { type: 'keydown', timestamp: 100 },
       { type: 'keydown', timestamp: 200 }
     ],
     duration: 60000, // 1 minute
-    finalValue: 'Hello world test typing',
-    devToolsDetected: false
+    finalValue: words
   };
-  
-  const verification = recorder.verifyTypingAuthenticity();
-  
+
+  const verification = recorder.verify();
+
   if (!verification.isAuthentic) {
     throw new Error(`Verification should pass: ${verification.reason}`);
   }
-  
-  // Test realistic WPM range
-  if (verification.wpm < 1 || verification.wpm > 300) {
-    throw new Error(`WPM should be in realistic range, got: ${verification.wpm}`);
+
+  if (verification.wpm !== 40) {
+    throw new Error(`Expected 40 WPM for 40 words in 60s, got: ${verification.wpm}`);
   }
 });
 
-suite.test('Developer tools detection logic', () => {
+suite.test('Verification - too fast rejection', () => {
   const recorder = new TypingRecorder();
-  recorder.isRecording = true;
-  recorder.currentRecording = {};
-  
-  let devToolsDetected = false;
-  
-  // Mock handleDevToolsDetected
-  const originalHandle = recorder.handleDevToolsDetected;
-  recorder.handleDevToolsDetected = () => {
-    devToolsDetected = true;
-    recorder.currentRecording.devToolsDetected = true;
+  recorder.recording = {
+    events: [{ type: 'keydown', timestamp: 0 }],
+    duration: 2000, // 2 seconds - below 5s minimum
+    finalValue: 'Hello'
   };
-  
-  // Simulate dev tools open scenario
-  global.window.outerWidth = 1200;
-  global.window.innerWidth = 800; // 400px difference > 200px threshold
-  
-  const widthThreshold = global.window.outerWidth - global.window.innerWidth > 200;
-  
-  if (widthThreshold && !recorder.devToolsOpen) {
-    recorder.devToolsOpen = true;
-    recorder.handleDevToolsDetected();
-  }
-  
-  if (!devToolsDetected) {
-    throw new Error('Developer tools detection should trigger');
-  }
-  
-  if (!recorder.currentRecording.devToolsDetected) {
-    throw new Error('Recording should be marked as having dev tools detected');
+
+  const verification = recorder.verify();
+
+  if (verification.isAuthentic) {
+    throw new Error('Should reject recordings shorter than 5 seconds');
   }
 });
 
-suite.test('Event throttling mechanism', () => {
+suite.test('Recording data structure', () => {
   const recorder = new TypingRecorder();
-  let eventCount = 0;
-  let throttledEventCount = 0;
-  
-  // Mock recordEvent
-  recorder.recordEvent = () => {
-    eventCount++;
-  };
-  
-  // Simulate throttled event handling
-  let eventThrottle;
-  const simulateInputEvent = () => {
-    clearTimeout(eventThrottle);
-    eventThrottle = setTimeout(() => {
-      throttledEventCount++;
-      recorder.recordEvent();
-    }, 16);
-  };
-  
-  // Fire multiple events rapidly
-  for (let i = 0; i < 10; i++) {
-    simulateInputEvent();
-  }
-  
-  // Wait for throttle to complete
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (throttledEventCount !== 1) {
-        throw new Error(`Expected 1 throttled event, got ${throttledEventCount}`);
-      }
-      resolve();
-    }, 50);
-  });
-});
 
-suite.test('Recording data structure validation', () => {
-  const recorder = new TypingRecorder();
-  
-  // Mock element
   const mockElement = {
     value: 'test content',
+    textContent: '',
     tagName: 'TEXTAREA',
-    placeholder: 'Enter text...'
+    placeholder: 'Enter text...',
+    disabled: false,
+    readOnly: false,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    getBoundingClientRect: () => ({ width: 200, height: 100 })
   };
-  
-  // Mock recording creation (normally in startRecording)
-  const recordingId = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-  const recording = {
-    id: recordingId,
-    startTime: Date.now(),
+
+  // Simulate startRecording without DOM side effects
+  recorder.isRecording = true;
+  recorder.currentElement = mockElement;
+  recorder.startTime = Date.now();
+  recorder.recording = {
+    id: recorder.generateId(),
+    startTime: recorder.startTime,
     events: [],
     initialValue: mockElement.value || mockElement.textContent || '',
-    elementType: mockElement.tagName.toLowerCase(),
-    placeholder: mockElement.placeholder || '',
     url: global.window.location.href,
     domain: global.window.location.hostname
   };
-  
-  // Validate recording structure
-  if (!recording.id || typeof recording.id !== 'string') {
+
+  if (!recorder.recording.id || typeof recorder.recording.id !== 'string') {
     throw new Error('Recording should have valid ID');
   }
-  
-  if (!recording.startTime || typeof recording.startTime !== 'number') {
+
+  if (!recorder.recording.startTime || typeof recorder.recording.startTime !== 'number') {
     throw new Error('Recording should have valid start time');
   }
-  
-  if (!Array.isArray(recording.events)) {
+
+  if (!Array.isArray(recorder.recording.events)) {
     throw new Error('Recording should have events array');
   }
-  
-  if (recording.elementType !== 'textarea') {
-    throw new Error('Recording should capture element type correctly');
-  }
-  
-  if (recording.domain !== global.window.location.hostname) {
+
+  if (recorder.recording.domain !== global.window.location.hostname) {
     throw new Error('Recording should capture domain correctly');
+  }
+});
+
+suite.test('formatShareText generates correct output', () => {
+  const recorder = new TypingRecorder();
+  const result = recorder.formatShareText('https://example.com/replay', { wpm: 85 });
+
+  if (!result.reddit.includes('85 WPM')) {
+    throw new Error('Reddit format should include WPM');
+  }
+
+  if (!result.reddit.includes('https://example.com/replay')) {
+    throw new Error('Reddit format should include share URL');
+  }
+
+  if (!result.linkedin.includes('https://example.com/replay')) {
+    throw new Error('LinkedIn format should include share URL');
+  }
+});
+
+suite.test('generateId produces unique IDs', () => {
+  const recorder = new TypingRecorder();
+  const id1 = recorder.generateId();
+  const id2 = recorder.generateId();
+
+  if (id1 === id2) {
+    throw new Error('Generated IDs should be unique');
+  }
+
+  if (typeof id1 !== 'string' || id1.length < 5) {
+    throw new Error('ID should be a non-trivial string');
   }
 });
 

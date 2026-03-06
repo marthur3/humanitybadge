@@ -4,168 +4,173 @@
   <meta charset="utf-8">
   <title>Humanity Badge - Typing Replay</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Open Graph tags for social media sharing -->
   <meta property="og:title" content="Humanity Badge - Verified Human Typing">
   <meta property="og:description" content="Authentic human typing verified with Humanity Badge">
   <meta property="og:type" content="website">
-
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --blue-600: #1a73e8;
+      --blue-50: #e8f0fe;
+      --green-600: #1e8e3e;
+      --green-50: #e6f4ea;
+      --red-600: #d93025;
+      --red-50: #fce8e6;
+      --grey-50: #f8f9fa;
+      --grey-200: #e8eaed;
+      --grey-300: #dadce0;
+      --grey-500: #9aa0a6;
+      --grey-700: #5f6368;
+      --grey-900: #202124;
     }
 
+    * { box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Google Sans', 'Segoe UI', Roboto, -apple-system, sans-serif;
       margin: 0;
       padding: 20px;
-      background: #f5f5f5;
+      background: var(--grey-50);
     }
 
     .replay-container {
       max-width: 800px;
       margin: 0 auto;
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px rgba(60,64,67,0.15);
       overflow: hidden;
     }
 
     .replay-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--blue-600);
       color: white;
-      padding: 20px;
+      padding: 24px;
       text-align: center;
     }
 
     .replay-header h1 {
-      margin: 0 0 10px 0;
-      font-size: 24px;
+      margin: 0 0 8px 0;
+      font-size: 22px;
+      font-weight: 400;
     }
 
     .replay-info {
       display: flex;
       justify-content: center;
       gap: 20px;
-      font-size: 14px;
+      font-size: 13px;
       opacity: 0.9;
       flex-wrap: wrap;
     }
 
     .verification-badge {
       display: inline-block;
-      background: rgba(255, 255, 255, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 10px;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 12px;
     }
 
     .verification-badge.verified {
-      background: rgba(76, 175, 80, 0.3);
+      background: rgba(255,255,255,0.2);
+      color: white;
     }
 
     .verification-badge.failed {
-      background: rgba(244, 67, 54, 0.3);
+      background: rgba(217,48,37,0.3);
+      color: white;
     }
 
     .replay-controls {
-      padding: 20px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #eee;
+      gap: 8px;
+      border-bottom: 1px solid var(--grey-200);
       flex-wrap: wrap;
     }
 
     .replay-controls button {
-      padding: 10px 15px;
+      padding: 8px 16px;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
-      background: #4CAF50;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--blue-600);
       color: white;
-      transition: background 0.2s;
+      font-family: inherit;
+      transition: background 0.15s;
     }
 
-    .replay-controls button:hover:not(:disabled) {
-      background: #45a049;
-    }
-
-    .replay-controls button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
+    .replay-controls button:hover:not(:disabled) { background: #1765cc; }
+    .replay-controls button:disabled { background: var(--grey-300); cursor: not-allowed; }
 
     .speed-controls {
       margin-left: auto;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-size: 13px;
+      color: var(--grey-700);
     }
 
     .speed-controls select {
-      padding: 5px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
+      padding: 6px 8px;
+      border: 1px solid var(--grey-300);
+      border-radius: 4px;
+      font-family: inherit;
     }
 
-    .progress-container {
-      padding: 0 20px 20px;
-    }
+    .progress-container { padding: 0 20px 16px; }
 
     .progress-bar {
       width: 100%;
-      height: 8px;
-      background: #e0e0e0;
-      border-radius: 4px;
+      height: 6px;
+      background: var(--grey-200);
+      border-radius: 3px;
       overflow: hidden;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     #progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4CAF50, #45a049);
+      background: var(--blue-600);
       width: 0%;
       transition: width 0.1s linear;
+      border-radius: 3px;
     }
 
     .time-info {
       display: flex;
       justify-content: space-between;
       font-size: 12px;
-      color: #666;
+      color: var(--grey-500);
     }
 
-    .replay-area {
-      padding: 20px;
-      background: #fafafa;
-    }
-
-    .textarea-container {
-      position: relative;
-    }
+    .replay-area { padding: 20px; background: var(--grey-50); }
+    .textarea-container { position: relative; }
 
     #replay-textarea {
       width: 100%;
       min-height: 200px;
-      padding: 15px;
-      border: 2px solid #ddd;
+      padding: 16px;
+      border: 1px solid var(--grey-300);
       border-radius: 8px;
       font-family: monospace;
       font-size: 14px;
-      line-height: 1.4;
+      line-height: 1.5;
       resize: vertical;
       background: white;
+      color: var(--grey-900);
     }
 
     #cursor {
       position: absolute;
       width: 2px;
       height: 20px;
-      background: #333;
+      background: var(--blue-600);
       animation: blink 1s infinite;
       pointer-events: none;
       display: none;
@@ -177,88 +182,78 @@
     }
 
     .replay-stats {
-      padding: 20px;
+      padding: 16px 20px;
       display: flex;
       justify-content: space-around;
-      background: #f9f9f9;
-      border-top: 1px solid #eee;
+      background: white;
+      border-top: 1px solid var(--grey-200);
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 12px;
     }
 
-    .stat {
-      text-align: center;
-    }
-
+    .stat { text-align: center; }
     .stat label {
       display: block;
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 5px;
+      font-size: 11px;
+      color: var(--grey-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
     }
 
     .stat span {
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--grey-900);
     }
 
     .replay-footer {
       padding: 20px;
-      background: #f0f0f0;
+      background: var(--grey-50);
+      border-top: 1px solid var(--grey-200);
       text-align: center;
     }
 
     .footer-info {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 15px;
+      font-size: 13px;
+      color: var(--grey-700);
+      margin-bottom: 12px;
     }
 
     .get-extension-btn {
       display: inline-block;
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #4CAF50, #45a049);
+      padding: 10px 24px;
+      background: var(--blue-600);
       color: white;
       text-decoration: none;
-      border-radius: 6px;
-      font-weight: 600;
-      transition: transform 0.2s;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 0.15s;
     }
 
-    .get-extension-btn:hover {
-      transform: scale(1.05);
-    }
+    .get-extension-btn:hover { background: #1765cc; }
 
     .error {
       text-align: center;
       padding: 40px;
-      color: #f44336;
-      background: #ffebee;
+      color: var(--red-600);
+      background: var(--red-50);
       margin: 20px;
-      border-radius: 5px;
+      border-radius: 8px;
     }
 
     @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
-
-      .replay-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .speed-controls {
-        margin-left: 0;
-      }
+      body { padding: 10px; }
+      .replay-controls { flex-direction: column; align-items: stretch; }
+      .speed-controls { margin-left: 0; }
     }
   </style>
 </head>
 <body>
   <div class="replay-container">
     <header class="replay-header">
-      <h1>🎬 Humanity Badge - Verified Human Typing</h1>
+      <h1>Humanity Badge - Verified Typing</h1>
       <div class="replay-info">
         <span id="site-info"></span>
         <span id="duration-info"></span>
@@ -267,9 +262,9 @@
     </header>
 
     <div class="replay-controls">
-      <button id="play-btn">▶️ Play</button>
-      <button id="pause-btn" disabled>⏸️ Pause</button>
-      <button id="reset-btn">⏹️ Reset</button>
+      <button id="play-btn">Play</button>
+      <button id="pause-btn" disabled>Pause</button>
+      <button id="reset-btn">Reset</button>
       <div class="speed-controls">
         <label>Speed:</label>
         <select id="speed-select">
@@ -300,36 +295,33 @@
 
     <div class="replay-stats">
       <div class="stat">
-        <label>Characters:</label>
+        <label>Characters</label>
         <span id="char-count">0</span>
       </div>
       <div class="stat">
-        <label>Words:</label>
+        <label>Words</label>
         <span id="word-count">0</span>
       </div>
       <div class="stat">
-        <label>WPM:</label>
+        <label>WPM</label>
         <span id="wpm">0</span>
       </div>
     </div>
 
     <footer class="replay-footer">
       <div class="footer-info">
-        This replay was created with the Humanity Badge browser extension<br>
-        Verify authentic human typing on any website
+        Verified with Humanity Badge - proving human authenticity
       </div>
       <a href="https://github.com/humanitybadge/extension" class="get-extension-btn" target="_blank">
-        Get Humanity Badge Extension
+        Get Humanity Badge
       </a>
     </footer>
   </div>
 
-  <!-- Embedded recording data (will be replaced by background.js) -->
   <script id="recording-data" type="application/json">
     {{RECORDING_DATA}}
   </script>
 
-  <!-- Standalone replay player -->
   <script>
     class StandaloneReplayPlayer {
       constructor() {
@@ -349,11 +341,10 @@
       }
 
       init() {
-        // Load recording from embedded data
         try {
           const dataScript = document.getElementById('recording-data');
           if (!dataScript || !dataScript.textContent.trim()) {
-            this.showError('No recording data found in this file');
+            this.showError('No recording data found');
             return;
           }
 
@@ -366,25 +357,22 @@
       }
 
       setupReplay() {
-        // Set initial state
         this.textarea.value = this.recording.initialValue || '';
         this.textarea.placeholder = this.recording.placeholder || '';
 
-        // Update info
         document.getElementById('site-info').textContent = `From: ${this.recording.domain || 'Unknown'}`;
         document.getElementById('duration-info').textContent = `Duration: ${Math.round(this.recording.duration / 1000)}s`;
         document.getElementById('total-time').textContent = Math.round(this.recording.duration / 1000) + 's';
 
-        // Show verification status
         const verification = this.recording.verification || {};
         const badge = document.getElementById('verification-badge');
 
         if (verification.isAuthentic) {
           badge.className = 'verification-badge verified';
-          badge.textContent = `✓ Verified Human - ${verification.wpm} WPM`;
+          badge.textContent = `Verified Human - ${verification.wpm} WPM`;
         } else {
           badge.className = 'verification-badge failed';
-          badge.textContent = `❌ ${verification.reason || 'Verification Failed'}`;
+          badge.textContent = verification.reason || 'Verification Failed';
         }
 
         this.updateStats();
@@ -394,7 +382,6 @@
         document.getElementById('play-btn').addEventListener('click', () => this.play());
         document.getElementById('pause-btn').addEventListener('click', () => this.pause());
         document.getElementById('reset-btn').addEventListener('click', () => this.reset());
-
         document.getElementById('speed-select').addEventListener('change', (e) => {
           this.speed = parseFloat(e.target.value);
         });
@@ -402,14 +389,11 @@
 
       play() {
         if (!this.recording) return;
-
         this.isPlaying = true;
         this.isPaused = false;
         this.startTime = Date.now() - this.pausedTime;
-
         document.getElementById('play-btn').disabled = true;
         document.getElementById('pause-btn').disabled = false;
-
         this.cursor.style.display = 'block';
         this.playLoop();
       }
@@ -418,10 +402,8 @@
         this.isPaused = true;
         this.isPlaying = false;
         this.pausedTime = Date.now() - this.startTime;
-
         document.getElementById('play-btn').disabled = false;
         document.getElementById('pause-btn').disabled = true;
-
         this.cursor.style.display = 'none';
       }
 
@@ -431,15 +413,12 @@
         this.currentEventIndex = 0;
         this.pausedTime = 0;
         this.startTime = null;
-
         this.textarea.value = this.recording.initialValue || '';
         this.cursor.style.display = 'none';
         this.progressFill.style.width = '0%';
-
         document.getElementById('play-btn').disabled = false;
         document.getElementById('pause-btn').disabled = true;
         document.getElementById('current-time').textContent = '0s';
-
         this.updateStats();
       }
 
@@ -449,27 +428,19 @@
         const elapsed = (Date.now() - this.startTime) * this.speed;
         const events = this.recording.events || [];
 
-        // Process all events that should have happened by now
         while (this.currentEventIndex < events.length &&
                events[this.currentEventIndex].timestamp <= elapsed) {
-
-          const event = events[this.currentEventIndex];
-          this.processEvent(event);
+          this.processEvent(events[this.currentEventIndex]);
           this.currentEventIndex++;
         }
 
-        // Update progress
         const progress = Math.min(elapsed / this.recording.duration * 100, 100);
         this.progressFill.style.width = progress + '%';
         document.getElementById('current-time').textContent = Math.round(elapsed / 1000) + 's';
 
-        // Update cursor position
         this.updateCursorPosition();
-
-        // Update stats
         this.updateStats();
 
-        // Check if finished
         if (this.currentEventIndex >= events.length) {
           this.isPlaying = false;
           document.getElementById('play-btn').disabled = false;
@@ -478,15 +449,12 @@
           return;
         }
 
-        // Continue loop
         requestAnimationFrame(() => this.playLoop());
       }
 
       processEvent(event) {
         if (event.type === 'input') {
           this.textarea.value = event.value || '';
-
-          // Set cursor position if available
           if (typeof event.selectionStart === 'number') {
             this.textarea.selectionStart = event.selectionStart;
             this.textarea.selectionEnd = event.selectionEnd;
@@ -495,15 +463,11 @@
       }
 
       updateCursorPosition() {
-        const textarea = this.textarea;
-        const cursorPos = textarea.selectionStart || 0;
-
-        const textBeforeCursor = textarea.value.substring(0, cursorPos);
+        const cursorPos = this.textarea.selectionStart || 0;
+        const textBeforeCursor = this.textarea.value.substring(0, cursorPos);
         const lines = textBeforeCursor.split('\n').length;
-        const lineHeight = 20;
-
         this.cursor.style.left = '15px';
-        this.cursor.style.top = (15 + (lines - 1) * lineHeight) + 'px';
+        this.cursor.style.top = (15 + (lines - 1) * 20) + 'px';
       }
 
       updateStats() {
@@ -511,7 +475,6 @@
         const charCount = text.length;
         const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
 
-        // Calculate current WPM based on elapsed time
         let wpm = 0;
         if (this.isPlaying && this.startTime) {
           const elapsedMinutes = ((Date.now() - this.startTime) * this.speed) / 60000;
@@ -535,7 +498,6 @@
       }
     }
 
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => new StandaloneReplayPlayer());
     } else {

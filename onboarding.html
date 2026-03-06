@@ -4,15 +4,28 @@
   <meta charset="utf-8">
   <title>Welcome to Humanity Badge</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --blue-600: #1a73e8;
+      --blue-700: #1765cc;
+      --blue-50: #e8f0fe;
+      --green-600: #1e8e3e;
+      --green-50: #e6f4ea;
+      --red-50: #fce8e6;
+      --red-600: #d93025;
+      --grey-50: #f8f9fa;
+      --grey-100: #f1f3f4;
+      --grey-200: #e8eaed;
+      --grey-300: #dadce0;
+      --grey-500: #9aa0a6;
+      --grey-700: #5f6368;
+      --grey-900: #202124;
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Google Sans', 'Segoe UI', Roboto, -apple-system, sans-serif;
+      background: var(--grey-50);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -22,337 +35,345 @@
 
     .container {
       background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      max-width: 600px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px rgba(60,64,67,0.15);
+      max-width: 540px;
       width: 100%;
       overflow: hidden;
     }
 
     .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--blue-600);
       color: white;
-      padding: 40px 30px;
+      padding: 40px 32px;
       text-align: center;
+    }
+
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      background: white;
+      color: var(--blue-600);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
     }
 
     .header h1 {
-      font-size: 32px;
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .header .subtitle {
-      font-size: 16px;
-      opacity: 0.95;
-    }
-
-    .content {
-      padding: 40px 30px;
-    }
-
-    .welcome-message {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .welcome-message h2 {
       font-size: 24px;
-      color: #333;
-      margin-bottom: 10px;
+      font-weight: 400;
+      margin-bottom: 8px;
     }
 
-    .welcome-message p {
-      color: #666;
-      font-size: 16px;
-      line-height: 1.6;
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .content { padding: 32px; }
+
+    .welcome-text {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .welcome-text h2 {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--grey-900);
+      margin-bottom: 8px;
+    }
+
+    .welcome-text p {
+      font-size: 14px;
+      color: var(--grey-700);
+      line-height: 1.5;
     }
 
     .feature-list {
-      margin: 30px 0;
+      margin-bottom: 28px;
     }
 
     .feature-item {
       display: flex;
       align-items: flex-start;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 10px;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
     }
 
+    .feature-item:hover { background: var(--grey-50); }
+
     .feature-icon {
-      font-size: 24px;
-      margin-right: 15px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--blue-50);
+      color: var(--blue-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
       flex-shrink: 0;
+      font-weight: 600;
     }
 
     .feature-text h3 {
-      font-size: 16px;
-      color: #333;
-      margin-bottom: 5px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--grey-900);
+      margin-bottom: 2px;
     }
 
     .feature-text p {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.5;
+      font-size: 13px;
+      color: var(--grey-700);
+      line-height: 1.4;
     }
 
     .cta-section {
-      background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-      border-radius: 15px;
-      padding: 25px;
-      margin: 30px 0;
+      background: var(--blue-50);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
       text-align: center;
     }
 
     .cta-section h3 {
-      font-size: 20px;
-      color: #2e7d32;
-      margin-bottom: 15px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--grey-900);
+      margin-bottom: 8px;
     }
 
     .cta-section p {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 20px;
-      line-height: 1.6;
+      font-size: 13px;
+      color: var(--grey-700);
+      margin-bottom: 16px;
+      line-height: 1.5;
     }
 
     .btn {
       display: inline-block;
-      padding: 14px 30px;
+      padding: 10px 24px;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s;
-      text-decoration: none;
+      font-family: inherit;
+      transition: all 0.15s;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      background: var(--blue-600);
       color: white;
-      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    .btn-primary:hover { background: var(--blue-700); }
+
+    .btn-primary:disabled {
+      background: var(--grey-300);
+      cursor: not-allowed;
     }
 
-    .btn-secondary {
-      background: transparent;
-      color: #666;
-      border: 2px solid #ddd;
-      margin-top: 10px;
+    .btn-text {
+      background: none;
+      color: var(--grey-700);
+      padding: 10px 24px;
     }
 
-    .btn-secondary:hover {
-      background: #f5f5f5;
-      border-color: #ccc;
-    }
+    .btn-text:hover { background: var(--grey-100); }
 
-    .button-group {
+    .btn-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
+      align-items: center;
+      gap: 4px;
     }
 
     .info-box {
-      background: #e3f2fd;
-      border-left: 4px solid #2196F3;
-      padding: 15px;
-      border-radius: 5px;
-      margin-top: 20px;
+      background: var(--grey-50);
+      border-left: 3px solid var(--blue-600);
+      padding: 14px 16px;
+      border-radius: 4px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--grey-700);
+      line-height: 1.5;
     }
 
-    .info-box p {
-      font-size: 14px;
-      color: #1565c0;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .status-message {
-      padding: 12px;
-      border-radius: 6px;
-      margin-top: 15px;
-      font-size: 14px;
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 12px;
       display: none;
     }
 
-    .status-message.error {
-      background: #ffebee;
-      color: #c62828;
-      border: 1px solid #ffcdd2;
-    }
+    .alert.error { background: var(--red-50); color: var(--red-600); }
+    .alert.success { background: var(--green-50); color: var(--green-600); }
 
-    .status-message.success {
-      background: #e8f5e8;
-      color: #2e7d32;
-      border: 1px solid #c8e6c9;
-    }
+    #oauth-step { display: none; }
 
-    .status-message.info {
-      background: #fff3e0;
-      color: #f57c00;
-      border: 1px solid #ffe0b2;
-    }
-
-    #oauth-step {
-      display: none;
-    }
-
-    .device-code-display {
-      background: #f5f5f5;
-      border: 2px dashed #4CAF50;
-      border-radius: 10px;
-      padding: 20px;
+    .device-code-box {
+      background: var(--grey-50);
+      border: 2px dashed var(--blue-600);
+      border-radius: 12px;
+      padding: 24px;
       text-align: center;
       margin: 20px 0;
     }
 
-    .user-code {
+    .device-code-value {
       font-size: 32px;
       font-weight: 700;
-      color: #4CAF50;
+      color: var(--blue-600);
       letter-spacing: 4px;
       font-family: monospace;
-      margin: 15px 0;
+      margin: 12px 0;
     }
 
-    .verification-link {
+    .device-code-link {
       display: inline-block;
-      margin-top: 15px;
-      padding: 12px 24px;
-      background: #4CAF50;
+      margin-top: 12px;
+      padding: 10px 24px;
+      background: var(--blue-600);
       color: white;
       text-decoration: none;
-      border-radius: 6px;
-      font-weight: 600;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 14px;
     }
 
-    .verification-link:hover {
-      background: #45a049;
-    }
+    .device-code-link:hover { background: var(--blue-700); }
 
     .polling-status {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--grey-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .spinner {
       display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #4CAF50;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--grey-200);
+      border-top-color: var(--blue-600);
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 10px;
+      animation: spin 0.8s linear infinite;
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    #success-step { display: none; }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--green-50);
+      color: var(--green-600);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 16px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>✓ Humanity Badge</h1>
-      <p class="subtitle">Verify Your Human Authenticity</p>
+      <div class="header-icon">H</div>
+      <h1>Humanity Badge</h1>
+      <p>Prove your human authenticity</p>
     </div>
 
     <div class="content">
-      <!-- Initial Welcome -->
+      <!-- Welcome Step -->
       <div id="welcome-step">
-        <div class="welcome-message">
-          <h2>Welcome! Let's Get You Set Up</h2>
-          <p>Humanity Badge helps you prove you're human by recording your natural typing patterns.</p>
+        <div class="welcome-text">
+          <h2>Welcome! Let's get you set up</h2>
+          <p>Record your natural typing patterns to prove you're human, not AI.</p>
         </div>
 
         <div class="feature-list">
           <div class="feature-item">
-            <div class="feature-icon">🎯</div>
+            <div class="feature-icon">H</div>
             <div class="feature-text">
-              <h3>Professional Sharing</h3>
-              <p>Connect GitHub to get short, trusted URLs that look professional on Reddit & LinkedIn.</p>
+              <h3>Verify your humanity</h3>
+              <p>Record typing on any website and share proof that a real person wrote it.</p>
             </div>
           </div>
-
           <div class="feature-item">
-            <div class="feature-icon">♾️</div>
+            <div class="feature-icon">&#8599;</div>
             <div class="feature-text">
-              <h3>Unlimited Verifications</h3>
-              <p>Share as many typing proofs as you want without storage limits.</p>
+              <h3>Share anywhere</h3>
+              <p>Get short links that work on Reddit, LinkedIn, and any platform.</p>
             </div>
           </div>
-
           <div class="feature-item">
-            <div class="feature-icon">🔒</div>
+            <div class="feature-icon">&#128274;</div>
             <div class="feature-text">
-              <h3>Secure & Private</h3>
-              <p>Your recordings are stored privately. Only people with the link can view them.</p>
+              <h3>Private by default</h3>
+              <p>Only people with the link can view your recording.</p>
             </div>
           </div>
         </div>
 
         <div class="cta-section">
-          <h3>Connect with GitHub (Recommended)</h3>
-          <p>
-            Get the best experience with short, professional URLs for your typing verifications.
-            Takes just 30 seconds to set up!
-          </p>
-          <button id="connect-github-btn" class="btn btn-primary">
-            Connect with GitHub
-          </button>
+          <h3>Connect with GitHub (Optional)</h3>
+          <p>Get professional gist.github.com URLs. Takes 30 seconds. You can also skip this and use free cloud links instead.</p>
+          <button id="connect-github-btn" class="btn btn-primary">Connect with GitHub</button>
         </div>
 
-        <div class="button-group">
-          <button id="skip-btn" class="btn btn-secondary">
-            Skip for now - I'll use basic URLs
+        <div class="btn-group">
+          <button id="skip-btn" class="btn btn-text">
+            Skip - use cloud links instead
           </button>
         </div>
 
         <div class="info-box">
-          <p>
-            <strong>Don't have GitHub?</strong> No problem! The extension works great without it.
-            You'll get functional URLs via is.gd instead. You can always connect GitHub later in Settings.
-          </p>
+          <strong>No GitHub?</strong> No problem. The extension works great without it using free cloud storage. You can connect GitHub anytime in Settings.
         </div>
 
-        <div id="status-message" class="status-message"></div>
+        <div id="status-message" class="alert"></div>
       </div>
 
-      <!-- OAuth Flow Step -->
+      <!-- OAuth Step -->
       <div id="oauth-step">
-        <div class="welcome-message">
-          <h2>Authorize Humanity Badge</h2>
-          <p>Follow these steps to connect your GitHub account:</p>
+        <div class="welcome-text">
+          <h2>Connect your GitHub</h2>
+          <p>Enter the code below on GitHub to authorize.</p>
         </div>
 
-        <div class="device-code-display">
-          <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Your verification code:</p>
-          <div class="user-code" id="user-code">LOADING...</div>
-          <a id="verification-link" href="#" target="_blank" class="verification-link">
-            Open GitHub & Enter Code
+        <div class="device-code-box">
+          <div style="font-size: 13px; color: var(--grey-700);">Your verification code:</div>
+          <div class="device-code-value" id="user-code">LOADING...</div>
+          <a id="verification-link" href="#" target="_blank" class="device-code-link">
+            Open GitHub &amp; Enter Code
           </a>
         </div>
 
         <div class="info-box">
-          <p>
-            <strong>Instructions:</strong><br>
-            1. Click the button above to open GitHub<br>
-            2. Enter the code shown above<br>
-            3. Click "Authorize" on GitHub<br>
-            4. Return to this page - we'll automatically detect authorization
-          </p>
+          <strong>Steps:</strong><br>
+          1. Click the button above to open GitHub<br>
+          2. Enter the code shown above<br>
+          3. Click "Authorize" on GitHub<br>
+          4. This page will detect it automatically
         </div>
 
         <div class="polling-status" id="polling-status">
@@ -360,33 +381,21 @@
           <span>Waiting for authorization...</span>
         </div>
 
-        <div class="button-group">
-          <button id="cancel-oauth-btn" class="btn btn-secondary">
-            Cancel & Go Back
-          </button>
+        <div class="btn-group" style="margin-top: 16px;">
+          <button id="cancel-oauth-btn" class="btn btn-text">Cancel</button>
         </div>
 
-        <div id="oauth-status-message" class="status-message"></div>
+        <div id="oauth-status-message" class="alert"></div>
       </div>
 
       <!-- Success Step -->
-      <div id="success-step" style="display: none;">
-        <div class="welcome-message">
-          <h2>🎉 All Set!</h2>
-          <p>Your Humanity Badge is ready to use.</p>
-        </div>
-
-        <div class="feature-list">
-          <div class="feature-item">
-            <div class="feature-icon">✓</div>
-            <div class="feature-text">
-              <h3>You're Ready!</h3>
-              <p id="success-message">Extension is configured and ready to verify your typing.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="button-group">
+      <div id="success-step">
+        <div style="text-align: center;">
+          <div class="success-icon">&#10003;</div>
+          <h2 style="font-size: 20px; font-weight: 400; margin-bottom: 8px;">You're all set</h2>
+          <p id="success-message" style="font-size: 14px; color: var(--grey-700); margin-bottom: 24px;">
+            Extension is ready to verify your typing.
+          </p>
           <button id="close-onboarding-btn" class="btn btn-primary">
             Start Using Humanity Badge
           </button>
