@@ -279,7 +279,8 @@
           ${v.wpm ? `<span>${v.wpm} WPM</span>` : ''}
           ${dur ? `<span>${dur}s</span>` : ''}
           ${v.words ? `<span>${v.words} words</span>` : ''}
-          ${rec.domain ? `<span>from ${rec.domain}</span>` : ''}
+          ${rec.domain ? `<span>on ${rec.domain}</span>` : ''}
+          ${rec.recordedAt ? `<span>${new Date(rec.recordedAt).toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})}</span>` : ''}
         </div>
       </div>
 

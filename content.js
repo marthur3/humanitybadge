@@ -207,6 +207,7 @@ class TypingRecorder {
     this.recording = {
       id: this.generateId(),
       startTime: this.startTime,
+      recordedAt: new Date(this.startTime).toISOString(),
       events: [],
       initialValue: '',
       url: window.location.href,
@@ -423,6 +424,7 @@ class TypingRecorder {
             padding: 12px 14px; border: 1px solid #e8eaed; border-radius: 8px;
             font-size: 14px; line-height: 1.6; color: #202124;
             font-family: inherit; background: #f8f9fa; resize: vertical; outline: none;
+            white-space: pre; overflow-x: auto;
           ">${fullText}</textarea>
         </div>
 
