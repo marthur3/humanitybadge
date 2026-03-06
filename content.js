@@ -3,9 +3,12 @@ class TypingRecorder {
     this.isRecording = false;
     this.recording = null;
     this.startTime = null;
-    this.currentElement = null;
+    this.modalTextarea = null;
     this.button = null;
+    this.modal = null;
     this.enabled = true;
+    this.wpmInterval = null;
+    this.boundHandlers = null;
 
     this.init();
   }
@@ -32,466 +35,64 @@ class TypingRecorder {
 
     this.button = document.createElement('button');
     this.button.className = 'humanity-badge-btn';
-    this.button.innerHTML = 'H';
-    this.button.title = 'Humanity Badge - Click to record authentic typing';
+    this.button.title = 'Humanity Badge — Type a verified comment';
+    this.button.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
 
     this.button.style.cssText = `
       position: fixed !important;
       bottom: 20px !important;
       right: 20px !important;
-      width: 48px !important;
-      height: 48px !important;
+      width: 52px !important;
+      height: 52px !important;
       background: #1a73e8 !important;
       border: none !important;
       border-radius: 50% !important;
       cursor: pointer !important;
-      font-size: 20px !important;
       z-index: 2147483647 !important;
       color: white !important;
-      font-weight: 700 !important;
       font-family: 'Google Sans', 'Segoe UI', Roboto, sans-serif !important;
       box-shadow: 0 2px 8px rgba(26,115,232,0.4), 0 6px 20px rgba(26,115,232,0.2) !important;
       transition: all 0.2s cubic-bezier(0.4,0,0.2,1) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      letter-spacing: 0 !important;
-      line-height: 1 !important;
       padding: 0 !important;
     `;
 
     this.button.addEventListener('mouseenter', () => {
-      if (!this.isRecording) {
-        this.button.style.transform = 'scale(1.08)';
-        this.button.style.boxShadow = '0 4px 12px rgba(26,115,232,0.5), 0 8px 24px rgba(26,115,232,0.25)';
-      }
+      this.button.style.transform = 'scale(1.08)';
+      this.button.style.boxShadow = '0 4px 12px rgba(26,115,232,0.5), 0 8px 24px rgba(26,115,232,0.25)';
     });
 
     this.button.addEventListener('mouseleave', () => {
-      if (!this.isRecording) {
-        this.button.style.transform = 'scale(1)';
-        this.button.style.boxShadow = '0 2px 8px rgba(26,115,232,0.4), 0 6px 20px rgba(26,115,232,0.2)';
-      }
+      this.button.style.transform = 'scale(1)';
+      this.button.style.boxShadow = '0 2px 8px rgba(26,115,232,0.4), 0 6px 20px rgba(26,115,232,0.2)';
     });
 
-    this.button.addEventListener('click', () => {
-      if (this.isRecording) {
-        this.stopRecording();
-      } else {
-        const element = this.findInputElement();
-        this.startRecording(element);
-      }
-    });
-
+    this.button.addEventListener('click', () => this.openComposer());
     document.body.appendChild(this.button);
   }
 
-  findInputElement() {
-    const selectors = [
-      'textarea',
-      '[contenteditable="true"]',
-      'div[role="textbox"]',
-      'input[type="text"]'
-    ];
+  openComposer() {
+    if (this.modal) return;
 
-    for (const selector of selectors) {
-      const elements = document.querySelectorAll(selector);
-      for (const el of elements) {
-        const rect = el.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0 && !el.disabled && !el.readOnly) {
-          return el;
-        }
-      }
-    }
-    return null;
-  }
-
-  startRecording(element) {
-    if (!element) {
-      this.showMessage('No input field found on this page', '#d93025');
-      return;
+    if (!document.getElementById('hb-styles')) {
+      const style = document.createElement('style');
+      style.id = 'hb-styles';
+      style.textContent = `
+        @keyframes hb-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        #humanity-modal * { box-sizing: border-box; }
+      `;
+      document.head.appendChild(style);
     }
 
-    this.isRecording = true;
-    this.currentElement = element;
-    this.startTime = Date.now();
-    this.recording = {
-      id: this.generateId(),
-      startTime: this.startTime,
-      events: [],
-      initialValue: element.value || element.textContent || '',
-      url: window.location.href,
-      domain: window.location.hostname
-    };
-
-    // Update button to recording state
-    this.button.innerHTML = '<span style="width:18px;height:18px;background:white;border-radius:3px;display:block;"></span>';
-    this.button.title = 'Recording - Click to stop';
-    this.button.style.background = '#d93025 !important';
-    this.button.style.boxShadow = '0 2px 8px rgba(217,48,37,0.4), 0 6px 20px rgba(217,48,37,0.2) !important';
-
-    this.addListeners(element);
-    this.showRecordingIndicator();
-  }
-
-  addListeners(element) {
-    const events = ['input', 'keydown', 'paste', 'drop', 'dragover'];
-
-    this.boundHandlers = events.map(type => {
-      const handler = (e) => this.handleEvent(e);
-      element.addEventListener(type, handler, { passive: false });
-      return { type, handler };
-    });
-  }
-
-  removeListeners() {
-    if (!this.currentElement || !this.boundHandlers) return;
-
-    this.boundHandlers.forEach(({ type, handler }) => {
-      this.currentElement.removeEventListener(type, handler);
-    });
-    this.boundHandlers = null;
-  }
-
-  handleEvent(e) {
-    // Block paste and drop
-    if (e.type === 'paste' || e.type === 'drop' || e.type === 'dragover') {
-      e.preventDefault();
-      e.stopPropagation();
-      this.showMessage('Paste blocked - Type manually for verification', '#d93025');
-      return;
-    }
-
-    // Block keyboard paste
-    if (e.type === 'keydown' && (e.ctrlKey || e.metaKey) && e.key === 'v') {
-      e.preventDefault();
-      e.stopPropagation();
-      this.showMessage('Paste blocked - Type manually for verification', '#d93025');
-      return;
-    }
-
-    // Record event
-    if (this.isRecording) {
-      this.recording.events.push({
-        type: e.type,
-        timestamp: Date.now() - this.startTime,
-        key: e.key || '',
-        value: this.currentElement.value || this.currentElement.textContent || ''
-      });
-    }
-  }
-
-  stopRecording() {
-    if (!this.isRecording) return;
-
-    this.isRecording = false;
-    this.removeListeners();
-
-    // Reset button
-    this.button.innerHTML = 'H';
-    this.button.title = 'Humanity Badge - Click to record';
-    this.button.style.background = '#1a73e8 !important';
-    this.button.style.boxShadow = '0 2px 8px rgba(26,115,232,0.4), 0 6px 20px rgba(26,115,232,0.2) !important';
-    this.button.style.transform = 'scale(1)';
-
-    this.hideRecordingIndicator();
-
-    // Finalize recording
-    this.recording.endTime = Date.now();
-    this.recording.duration = this.recording.endTime - this.recording.startTime;
-    this.recording.finalValue = this.currentElement ?
-      (this.currentElement.value || this.currentElement.textContent || '') : '';
-
-    const verification = this.verify();
-    this.recording.verification = verification;
-
-    this.saveRecording();
-    this.currentElement = null;
-  }
-
-  verify() {
-    if (!this.recording || !this.recording.events.length) {
-      return { isAuthentic: false, reason: 'No typing data' };
-    }
-
-    const duration = this.recording.duration;
-    const text = this.recording.finalValue || '';
-    const words = text.split(/\s+/).filter(w => w.length > 0).length;
-    const minutes = duration / 60000;
-    const wpm = words / minutes;
-
-    if (duration < 5000) {
-      return { isAuthentic: false, reason: 'Too fast - minimum 5 seconds required' };
-    }
-
-    if (wpm < 10 || wpm > 200) {
-      return { isAuthentic: false, reason: `Unrealistic speed: ${Math.round(wpm)} WPM` };
-    }
-
-    return {
-      isAuthentic: true,
-      wpm: Math.round(wpm),
-      duration: Math.round(duration / 1000),
-      characters: text.length,
-      words: words
-    };
-  }
-
-  saveRecording() {
-    chrome.runtime.sendMessage({
-      action: 'saveRecording',
-      data: this.recording
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('Runtime error:', chrome.runtime.lastError);
-        if (chrome.runtime.lastError.message.includes('Extension context invalidated')) {
-          this.showMessage('Extension was reloaded. Please refresh this page.', '#f29900');
-        } else {
-          this.showMessage('Failed to save: ' + chrome.runtime.lastError.message, '#d93025');
-        }
-        return;
-      }
-
-      if (response && response.success) {
-        this.showShareDialog(response);
-      } else {
-        this.showMessage('Failed to save recording: ' + (response?.error || 'Unknown error'), '#d93025');
-      }
-    });
-  }
-
-  showShareDialog(response) {
-    const { shareUrl, shareType, recordingSize, htmlExport } = response;
-    const verification = this.recording.verification;
-    const isAuthentic = verification && verification.isAuthentic;
-    const sizeKB = Math.round(recordingSize / 1024);
-
-    // Share method label
-    let methodLabel = '';
-    let methodColor = '#1a73e8';
-    switch (shareType) {
-      case 'github-gist':
-        methodLabel = 'GitHub Gist';
-        methodColor = '#1e8e3e';
-        break;
-      case 'jsonblob-short':
-      case 'jsonblob':
-        methodLabel = 'Cloud link';
-        methodColor = '#1a73e8';
-        break;
-      case 'is.gd-short':
-        methodLabel = 'Shortened URL';
-        methodColor = '#1a73e8';
-        break;
-      case 'hash':
-      case 'hash-large':
-        methodLabel = `Direct link (${sizeKB}KB)`;
-        methodColor = '#f29900';
-        break;
-      case 'html-only':
-        methodLabel = 'Download only';
-        methodColor = '#d93025';
-        break;
-      default:
-        methodLabel = 'Shareable link';
-    }
-
-    // Detect platform
-    const hostname = window.location.hostname.toLowerCase();
-    const isReddit = hostname.includes('reddit.com');
-    const isLinkedIn = hostname.includes('linkedin.com');
-    const defaultTab = isReddit ? 'reddit' : (isLinkedIn ? 'linkedin' : 'link');
-
-    const shareData = this.formatShareText(shareUrl, verification);
-
-    const dialog = document.createElement('div');
-    dialog.id = 'humanity-share-dialog';
-
-    const escapedReddit = (shareData.reddit || '').replace(/"/g, '&quot;');
-    const escapedLinkedIn = (shareData.linkedin || '').replace(/"/g, '&quot;');
-
-    dialog.innerHTML = `
-      <div style="
-        background: white;
-        border-radius: 12px;
-        max-width: 520px;
-        width: 100%;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.28);
-        font-family: 'Google Sans', 'Segoe UI', Roboto, sans-serif;
-        overflow: hidden;
-      ">
-        <!-- Header -->
-        <div style="
-          padding: 20px 24px;
-          background: ${isAuthentic ? '#1a73e8' : '#d93025'};
-          color: white;
-        ">
-          <div style="font-size: 18px; font-weight: 500; margin-bottom: 4px;">
-            ${isAuthentic ? 'Verified Human Typing' : 'Verification Failed'}
-          </div>
-          ${isAuthentic ? `
-            <div style="font-size: 13px; opacity: 0.9;">
-              ${verification.wpm} WPM &middot; ${verification.duration}s &middot; ${verification.characters} characters
-            </div>
-          ` : `
-            <div style="font-size: 13px; opacity: 0.9;">${verification.reason}</div>
-          `}
-        </div>
-
-        <!-- Method badge -->
-        <div style="
-          padding: 10px 24px;
-          background: #f8f9fa;
-          border-bottom: 1px solid #e8eaed;
-          font-size: 12px;
-          color: #5f6368;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        ">
-          <span style="
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: ${methodColor};
-          "></span>
-          Shared via ${methodLabel}
-        </div>
-
-        <!-- Tabs -->
-        <div style="display: flex; border-bottom: 1px solid #e8eaed;">
-          ${['reddit', 'linkedin', 'link', 'download'].map(tab => `
-            <button class="humanity-tab" data-tab="${tab}" style="
-              flex: 1;
-              padding: 12px 8px;
-              border: none;
-              background: none;
-              cursor: pointer;
-              font-size: 13px;
-              font-weight: 500;
-              color: ${defaultTab === tab ? '#1a73e8' : '#5f6368'};
-              border-bottom: 2px solid ${defaultTab === tab ? '#1a73e8' : 'transparent'};
-              font-family: inherit;
-              transition: all 0.15s;
-            ">${tab.charAt(0).toUpperCase() + tab.slice(1)}</button>
-          `).join('')}
-        </div>
-
-        <!-- Tab Content -->
-        <div style="padding: 20px 24px;">
-
-          <div class="humanity-tab-content" data-content="reddit" style="display: ${defaultTab === 'reddit' ? 'block' : 'none'};">
-            <div style="font-size: 13px; color: #5f6368; margin-bottom: 10px;">
-              Add to the end of your Reddit comment or post:
-            </div>
-            <textarea readonly style="
-              width: 100%; height: 72px; padding: 10px; border: 1px solid #dadce0;
-              border-radius: 8px; font-family: monospace; font-size: 12px;
-              resize: none; box-sizing: border-box; margin-bottom: 10px;
-              color: #202124; background: #f8f9fa;
-            ">${shareData.reddit}</textarea>
-            <button class="humanity-copy-format" data-text="${escapedReddit}" style="
-              width: 100%; padding: 10px; background: #ff4500; color: white;
-              border: none; border-radius: 8px; cursor: pointer;
-              font-weight: 500; font-size: 13px; font-family: inherit;
-              transition: background 0.15s;
-            ">Copy Reddit Format</button>
-          </div>
-
-          <div class="humanity-tab-content" data-content="linkedin" style="display: ${defaultTab === 'linkedin' ? 'block' : 'none'};">
-            <div style="font-size: 13px; color: #5f6368; margin-bottom: 10px;">
-              Add to your LinkedIn post:
-            </div>
-            <textarea readonly style="
-              width: 100%; height: 72px; padding: 10px; border: 1px solid #dadce0;
-              border-radius: 8px; font-family: monospace; font-size: 12px;
-              resize: none; box-sizing: border-box; margin-bottom: 10px;
-              color: #202124; background: #f8f9fa;
-            ">${shareData.linkedin}</textarea>
-            <button class="humanity-copy-format" data-text="${escapedLinkedIn}" style="
-              width: 100%; padding: 10px; background: #0a66c2; color: white;
-              border: none; border-radius: 8px; cursor: pointer;
-              font-weight: 500; font-size: 13px; font-family: inherit;
-              transition: background 0.15s;
-            ">Copy LinkedIn Format</button>
-          </div>
-
-          <div class="humanity-tab-content" data-content="link" style="display: ${defaultTab === 'link' ? 'block' : 'none'};">
-            ${shareUrl ? `
-              <input type="text" id="humanity-share-url" value="${shareUrl}" readonly style="
-                width: 100%; padding: 10px; border: 1px solid #dadce0;
-                border-radius: 8px; font-family: monospace; font-size: 12px;
-                box-sizing: border-box; margin-bottom: 10px;
-                color: #202124; background: #f8f9fa;
-              " onclick="this.select()">
-              <div style="display: flex; gap: 8px;">
-                <button id="humanity-copy-url" style="
-                  flex: 1; padding: 10px; background: #1a73e8; color: white;
-                  border: none; border-radius: 8px; cursor: pointer;
-                  font-weight: 500; font-size: 13px; font-family: inherit;
-                ">Copy Link</button>
-                <button id="humanity-view-btn" style="
-                  flex: 1; padding: 10px; background: white; color: #1a73e8;
-                  border: 1px solid #dadce0; border-radius: 8px; cursor: pointer;
-                  font-weight: 500; font-size: 13px; font-family: inherit;
-                ">View Replay</button>
-              </div>
-              <div style="
-                font-size: 12px; color: #1e8e3e; margin-top: 10px;
-                background: #e6f4ea; padding: 8px 12px; border-radius: 6px;
-              ">Works for anyone - no extension needed</div>
-            ` : `
-              <div style="font-size: 13px; color: #5f6368;">
-                Recording too large for URL sharing. Use the Download tab instead.
-              </div>
-            `}
-          </div>
-
-          <div class="humanity-tab-content" data-content="download" style="display: none;">
-            <div style="font-size: 13px; color: #5f6368; margin-bottom: 12px;">
-              Download a standalone HTML file that works anywhere:
-            </div>
-            <button id="humanity-download-html" style="
-              width: 100%; padding: 12px; background: #1a73e8; color: white;
-              border: none; border-radius: 8px; cursor: pointer;
-              font-weight: 500; font-size: 14px; font-family: inherit;
-              margin-bottom: 12px;
-            ">Download HTML File</button>
-            <div style="
-              background: #f8f9fa; padding: 12px; border-radius: 8px;
-              font-size: 12px; color: #5f6368; line-height: 1.6;
-            ">
-              <strong>How to share:</strong><br>
-              1. Download the HTML file<br>
-              2. Upload to GitHub Gist, Dropbox, or any host<br>
-              3. Share the public link
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="
-          padding: 12px 24px;
-          border-top: 1px solid #e8eaed;
-          display: flex;
-          justify-content: flex-end;
-        ">
-          <button id="humanity-close-btn" style="
-            padding: 8px 20px; background: none; color: #1a73e8;
-            border: none; border-radius: 8px; cursor: pointer;
-            font-weight: 500; font-size: 13px; font-family: inherit;
-            transition: background 0.15s;
-          ">Close</button>
-        </div>
-      </div>
-    `;
-
-    dialog.style.cssText = `
+    this.modal = document.createElement('div');
+    this.modal.id = 'humanity-modal';
+    this.modal.style.cssText = `
       position: fixed !important;
       top: 0 !important; left: 0 !important;
       right: 0 !important; bottom: 0 !important;
-      background: rgba(0,0,0,0.4) !important;
+      background: rgba(0,0,0,0.5) !important;
       z-index: 2147483647 !important;
       display: flex !important;
       align-items: center !important;
@@ -500,132 +101,419 @@ class TypingRecorder {
       font-family: 'Google Sans', 'Segoe UI', Roboto, sans-serif !important;
     `;
 
-    document.body.appendChild(dialog);
+    this.modal.innerHTML = `
+      <div id="hb-panel" style="
+        background: white;
+        border-radius: 14px;
+        width: 100%;
+        max-width: 560px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      ">
+        <div style="
+          padding: 16px 20px;
+          border-bottom: 1px solid #e8eaed;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        ">
+          <div style="
+            width: 10px; height: 10px;
+            background: #d93025; border-radius: 50%;
+            animation: hb-pulse 1.5s infinite;
+            flex-shrink: 0;
+          "></div>
+          <span style="font-weight: 600; font-size: 15px; color: #202124; flex: 1;">
+            Humanity Badge — Type Your Comment
+          </span>
+          <button id="hb-cancel-x" style="
+            background: none; border: none; cursor: pointer;
+            color: #5f6368; font-size: 22px; padding: 0 4px;
+            line-height: 1; font-family: inherit;
+          ">×</button>
+        </div>
 
-    // Tab switching
-    dialog.querySelectorAll('.humanity-tab').forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        const targetTab = e.target.dataset.tab;
-        dialog.querySelectorAll('.humanity-tab').forEach(t => {
-          const isActive = t.dataset.tab === targetTab;
-          t.style.color = isActive ? '#1a73e8' : '#5f6368';
-          t.style.borderBottom = isActive ? '2px solid #1a73e8' : '2px solid transparent';
-        });
-        dialog.querySelectorAll('.humanity-tab-content').forEach(content => {
-          content.style.display = content.dataset.content === targetTab ? 'block' : 'none';
-        });
-      });
+        <div id="hb-paste-warning" style="
+          display: none;
+          background: #fce8e6; color: #c5221f;
+          padding: 8px 20px; font-size: 12px; font-weight: 500;
+          border-bottom: 1px solid #f5c6c2;
+        ">Paste blocked — type manually to earn Humanity Badge verification</div>
+
+        <textarea id="hb-textarea"
+          placeholder="Type your comment here... Paste is blocked to ensure authenticity."
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="true"
+          style="
+            width: 100%; min-height: 160px; max-height: 320px;
+            padding: 16px 20px; border: none; outline: none; resize: vertical;
+            font-size: 15px; line-height: 1.6; color: #202124;
+            font-family: inherit; background: #fafafa;
+          "
+        ></textarea>
+
+        <div style="
+          padding: 8px 20px;
+          background: #f8f9fa;
+          border-top: 1px solid #f1f3f4;
+          border-bottom: 1px solid #e8eaed;
+          display: flex; align-items: center; gap: 16px;
+          font-size: 12px; color: #80868b;
+        ">
+          <span id="hb-stat-wpm">— WPM</span>
+          <span id="hb-stat-chars">0 chars</span>
+          <span id="hb-stat-time">0s</span>
+          <span style="margin-left: auto; font-size: 11px; color: #bdc1c6;">
+            No paste · No drag-drop · 100% human
+          </span>
+        </div>
+
+        <div style="padding: 14px 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="hb-cancel-btn" style="
+            padding: 9px 20px; border: 1px solid #dadce0;
+            border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 500; color: #5f6368;
+            background: white; font-family: inherit;
+          ">Cancel</button>
+          <button id="hb-done-btn" style="
+            padding: 9px 24px; background: #1a73e8; color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 500; font-family: inherit;
+          ">Verify & Get Badge</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(this.modal);
+
+    const textarea = this.modal.querySelector('#hb-textarea');
+    this.modalTextarea = textarea;
+    textarea.focus();
+
+    this.startRecording(textarea);
+
+    this.modal.querySelector('#hb-done-btn').addEventListener('click', () => this.finishRecording());
+    this.modal.querySelector('#hb-cancel-btn').addEventListener('click', () => this.closeModal());
+    this.modal.querySelector('#hb-cancel-x').addEventListener('click', () => this.closeModal());
+    this.modal.addEventListener('click', (e) => { if (e.target === this.modal) this.closeModal(); });
+
+    this.wpmInterval = setInterval(() => this.updateLiveStats(), 1000);
+  }
+
+  startRecording(element) {
+    this.isRecording = true;
+    this.startTime = Date.now();
+    this.recording = {
+      id: this.generateId(),
+      startTime: this.startTime,
+      events: [],
+      initialValue: '',
+      url: window.location.href,
+      domain: window.location.hostname
+    };
+
+    const handlers = {
+      keydown: (e) => this.handleKeydown(e),
+      input: (e) => this.handleInput(e),
+      paste: (e) => this.blockPaste(e),
+      drop: (e) => this.blockPaste(e),
+      dragover: (e) => { e.preventDefault(); e.stopPropagation(); },
+      contextmenu: (e) => { e.preventDefault(); e.stopPropagation(); }
+    };
+
+    this.boundHandlers = Object.entries(handlers).map(([type, handler]) => {
+      element.addEventListener(type, handler, { passive: false });
+      return { type, handler };
     });
+  }
 
-    // Copy format buttons
-    dialog.querySelectorAll('.humanity-copy-format').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+  blockPaste(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const warning = this.modal && this.modal.querySelector('#hb-paste-warning');
+    if (warning) {
+      warning.style.display = 'block';
+      clearTimeout(this._pasteWarnTimeout);
+      this._pasteWarnTimeout = setTimeout(() => { warning.style.display = 'none'; }, 3000);
+    }
+  }
+
+  handleKeydown(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+      this.blockPaste(e);
+      return;
+    }
+    if (!this.isRecording) return;
+    this.recording.events.push({
+      type: 'keydown',
+      timestamp: Date.now() - this.startTime,
+      key: e.key,
+      value: this.modalTextarea ? this.modalTextarea.value : ''
+    });
+  }
+
+  handleInput(e) {
+    if (!this.isRecording) return;
+    this.recording.events.push({
+      type: 'input',
+      timestamp: Date.now() - this.startTime,
+      key: '',
+      value: this.modalTextarea ? this.modalTextarea.value : ''
+    });
+  }
+
+  updateLiveStats() {
+    if (!this.modal || !this.isRecording) return;
+    const text = this.modalTextarea ? this.modalTextarea.value : '';
+    const elapsed = Math.round((Date.now() - this.startTime) / 1000);
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const wpm = elapsed > 0 && words > 0 ? Math.round(words / (elapsed / 60)) : 0;
+
+    const wpmEl = this.modal.querySelector('#hb-stat-wpm');
+    const charsEl = this.modal.querySelector('#hb-stat-chars');
+    const durEl = this.modal.querySelector('#hb-stat-time');
+    if (wpmEl) wpmEl.textContent = wpm > 0 ? `${wpm} WPM` : '— WPM';
+    if (charsEl) charsEl.textContent = `${text.length} chars`;
+    if (durEl) durEl.textContent = `${elapsed}s`;
+  }
+
+  finishRecording() {
+    if (!this.isRecording) return;
+
+    const text = this.modalTextarea ? this.modalTextarea.value.trim() : '';
+    if (!text) {
+      this.showMessage('Nothing typed yet!', '#f29900');
+      return;
+    }
+
+    this.isRecording = false;
+    clearInterval(this.wpmInterval);
+    this.removeListeners();
+
+    this.recording.endTime = Date.now();
+    this.recording.duration = this.recording.endTime - this.recording.startTime;
+    this.recording.finalValue = this.modalTextarea ? this.modalTextarea.value : '';
+
+    const verification = this.verify();
+    this.recording.verification = verification;
+
+    const doneBtn = this.modal && this.modal.querySelector('#hb-done-btn');
+    if (doneBtn) {
+      doneBtn.textContent = 'Verifying...';
+      doneBtn.disabled = true;
+    }
+
+    this.saveRecording();
+  }
+
+  removeListeners() {
+    if (!this.modalTextarea || !this.boundHandlers) return;
+    this.boundHandlers.forEach(({ type, handler }) => {
+      this.modalTextarea.removeEventListener(type, handler);
+    });
+    this.boundHandlers = null;
+  }
+
+  verify() {
+    if (!this.recording || !this.recording.events.length) {
+      return { isAuthentic: false, reason: 'No typing data recorded' };
+    }
+
+    const duration = this.recording.duration;
+    const text = this.recording.finalValue || '';
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const wpm = words / (duration / 60000);
+
+    if (duration < 5000) {
+      return { isAuthentic: false, reason: 'Too fast — minimum 5 seconds required' };
+    }
+
+    if (wpm < 10 || wpm > 200) {
+      return { isAuthentic: false, reason: `Speed outside human range: ${Math.round(wpm)} WPM` };
+    }
+
+    return {
+      isAuthentic: true,
+      wpm: Math.round(wpm),
+      duration: Math.round(duration / 1000),
+      characters: text.length,
+      words
+    };
+  }
+
+  saveRecording() {
+    chrome.runtime.sendMessage({ action: 'saveRecording', data: this.recording }, (response) => {
+      if (chrome.runtime.lastError) {
+        const msg = chrome.runtime.lastError.message;
+        if (msg.includes('Extension context invalidated')) {
+          this.showMessage('Extension reloaded — please refresh the page.', '#f29900');
+        } else {
+          this.showMessage('Save failed: ' + msg, '#d93025');
+        }
+        const doneBtn = this.modal && this.modal.querySelector('#hb-done-btn');
+        if (doneBtn) { doneBtn.textContent = 'Verify & Get Badge'; doneBtn.disabled = false; }
+        return;
+      }
+
+      if (response && response.success) {
+        this.showResultScreen(response);
+      } else {
+        this.showMessage('Failed: ' + (response ? response.error : 'Unknown error'), '#d93025');
+        const doneBtn = this.modal && this.modal.querySelector('#hb-done-btn');
+        if (doneBtn) { doneBtn.textContent = 'Verify & Get Badge'; doneBtn.disabled = false; }
+      }
+    });
+  }
+
+  showResultScreen(response) {
+    if (!this.modal) return;
+    const { shareUrl } = response;
+    const verification = this.recording.verification;
+    const commentText = this.recording.finalValue || '';
+    const isAuthentic = verification && verification.isAuthentic;
+
+    const badgeLine = isAuthentic && shareUrl
+      ? `\n\n[Humanity Badge: Verified Human \u2713 | ${verification.wpm} WPM](${shareUrl})`
+      : '';
+    const fullText = commentText + badgeLine;
+
+    const panel = this.modal.querySelector('#hb-panel');
+    if (!panel) return;
+
+    panel.innerHTML = `
+      <div style="
+        padding: 18px 20px;
+        background: ${isAuthentic ? '#1a73e8' : '#d93025'};
+        color: white;
+        display: flex; align-items: center; gap: 12px;
+      ">
+        <div style="font-size: 24px; line-height: 1;">${isAuthentic ? '✓' : '✗'}</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 15px;">
+            ${isAuthentic ? 'Humanity Badge Verified' : 'Verification Failed'}
+          </div>
+          <div style="font-size: 12px; opacity: 0.88; margin-top: 2px;">
+            ${isAuthentic
+              ? `${verification.wpm} WPM &middot; ${verification.duration}s &middot; ${verification.words} words`
+              : verification.reason}
+          </div>
+        </div>
+        <button id="hb-close-result" style="
+          background: rgba(255,255,255,0.2); border: none; cursor: pointer;
+          color: white; font-size: 18px; border-radius: 50%;
+          width: 28px; height: 28px; display: flex; align-items: center;
+          justify-content: center; font-family: inherit; padding: 0; flex-shrink: 0;
+        ">×</button>
+      </div>
+
+      ${isAuthentic && shareUrl ? `
+        <div style="padding: 16px 20px 8px;">
+          <div style="font-size: 11px; font-weight: 600; color: #80868b; letter-spacing: 0.5px; margin-bottom: 8px;">
+            YOUR COMMENT + HUMANITY BADGE — READY TO PASTE
+          </div>
+          <textarea id="hb-result-text" readonly style="
+            width: 100%; min-height: 120px; max-height: 240px;
+            padding: 12px 14px; border: 1px solid #e8eaed; border-radius: 8px;
+            font-size: 14px; line-height: 1.6; color: #202124;
+            font-family: inherit; background: #f8f9fa; resize: vertical; outline: none;
+          ">${fullText}</textarea>
+        </div>
+
+        <div style="padding: 8px 20px 14px; display: flex; gap: 8px;">
+          <button id="hb-copy-all" style="
+            flex: 1; padding: 11px; background: #1a73e8; color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 14px; font-family: inherit;
+          ">Copy Comment + Badge</button>
+          <button id="hb-copy-link" style="
+            padding: 11px 14px; background: white; color: #1a73e8;
+            border: 1px solid #dadce0; border-radius: 8px; cursor: pointer;
+            font-weight: 500; font-size: 13px; font-family: inherit; white-space: nowrap;
+          ">Link only</button>
+          <button id="hb-view-replay" style="
+            padding: 11px 14px; background: white; color: #5f6368;
+            border: 1px solid #dadce0; border-radius: 8px; cursor: pointer;
+            font-weight: 500; font-size: 13px; font-family: inherit; white-space: nowrap;
+          ">View replay</button>
+        </div>
+
+        <div style="
+          padding: 10px 20px; background: #e8f0fe;
+          border-top: 1px solid #d2e3fc;
+          font-size: 12px; color: #1967d2;
+        ">
+          Paste into your comment. Anyone can verify by clicking the badge link — no extension needed.
+        </div>
+      ` : `
+        <div style="padding: 20px; font-size: 14px; color: #5f6368; line-height: 1.6;">
+          ${verification.reason}<br><br>
+          <button id="hb-try-again" style="
+            padding: 9px 20px; background: #1a73e8; color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 500; font-family: inherit;
+          ">Try Again</button>
+        </div>
+      `}
+    `;
+
+    panel.querySelector('#hb-close-result').addEventListener('click', () => this.closeModal());
+    panel.querySelector('#hb-try-again') && panel.querySelector('#hb-try-again').addEventListener('click', () => this.closeModal());
+
+    const copyAllBtn = panel.querySelector('#hb-copy-all');
+    if (copyAllBtn) {
+      copyAllBtn.addEventListener('click', async () => {
         try {
-          const text = e.target.dataset.text.replace(/&quot;/g, '"');
-          await navigator.clipboard.writeText(text);
-          const originalText = e.target.textContent;
-          e.target.textContent = 'Copied!';
-          setTimeout(() => { e.target.textContent = originalText; }, 2000);
+          await navigator.clipboard.writeText(fullText);
+          copyAllBtn.textContent = '✓ Copied!';
+          copyAllBtn.style.background = '#1e8e3e';
+          setTimeout(() => {
+            copyAllBtn.textContent = 'Copy Comment + Badge';
+            copyAllBtn.style.background = '#1a73e8';
+          }, 2000);
         } catch (err) {
-          console.error('Copy failed:', err);
+          const ta = panel.querySelector('#hb-result-text');
+          if (ta) { ta.select(); document.execCommand('copy'); }
         }
       });
-    });
+    }
 
-    // Copy URL button
-    const copyUrlBtn = document.getElementById('humanity-copy-url');
-    if (copyUrlBtn) {
-      copyUrlBtn.addEventListener('click', async () => {
+    const copyLinkBtn = panel.querySelector('#hb-copy-link');
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(shareUrl);
-          copyUrlBtn.textContent = 'Copied!';
-          setTimeout(() => { copyUrlBtn.textContent = 'Copy Link'; }, 2000);
-        } catch (err) {
-          document.getElementById('humanity-share-url').select();
-        }
+          copyLinkBtn.textContent = '✓ Copied';
+          setTimeout(() => { copyLinkBtn.textContent = 'Link only'; }, 2000);
+        } catch (err) {}
       });
     }
 
-    // View button
-    document.getElementById('humanity-view-btn')?.addEventListener('click', () => {
-      window.open(shareUrl, '_blank');
-    });
-
-    // Download HTML button
-    const downloadBtn = document.getElementById('humanity-download-html');
-    if (downloadBtn && htmlExport) {
-      downloadBtn.addEventListener('click', () => {
-        this.downloadHTML(htmlExport, this.recording.id);
-      });
+    const viewBtn = panel.querySelector('#hb-view-replay');
+    if (viewBtn) {
+      viewBtn.addEventListener('click', () => window.open(shareUrl, '_blank'));
     }
+  }
 
-    // Close
-    document.getElementById('humanity-close-btn').addEventListener('click', () => dialog.remove());
-    dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.remove(); });
+  closeModal() {
+    clearInterval(this.wpmInterval);
+    if (this.isRecording) {
+      this.isRecording = false;
+      this.removeListeners();
+    }
+    if (this.modal) {
+      this.modal.remove();
+      this.modal = null;
+    }
+    this.modalTextarea = null;
   }
 
   formatShareText(shareUrl, verification) {
-    const wpm = verification.wpm || 0;
+    const wpm = (verification && verification.wpm) || 0;
     return {
       reddit: `Verified Human - ${wpm} WPM [Watch Replay](${shareUrl})`,
       linkedin: `Humanity Badge Verified - Authentic human writing\nView typing proof: ${shareUrl}`
     };
-  }
-
-  downloadHTML(htmlContent, recordingId) {
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `humanity-badge-${recordingId}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    this.showMessage('HTML file downloaded!', '#1e8e3e');
-  }
-
-  showRecordingIndicator() {
-    const indicator = document.createElement('div');
-    indicator.id = 'humanity-recording-indicator';
-    indicator.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 10px; height: 10px; background: #d93025; border-radius: 50%; animation: hb-pulse 1.5s infinite;"></div>
-        <span style="font-size: 13px; font-weight: 500;">Recording - Type normally</span>
-      </div>
-    `;
-    indicator.style.cssText = `
-      position: fixed !important;
-      top: 16px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      background: white !important;
-      color: #202124 !important;
-      padding: 10px 20px !important;
-      border-radius: 24px !important;
-      z-index: 2147483646 !important;
-      font-family: 'Google Sans', 'Segoe UI', Roboto, sans-serif !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 6px 20px rgba(0,0,0,0.1) !important;
-    `;
-
-    if (!document.getElementById('hb-pulse-animation')) {
-      const style = document.createElement('style');
-      style.id = 'hb-pulse-animation';
-      style.textContent = `
-        @keyframes hb-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    document.body.appendChild(indicator);
-  }
-
-  hideRecordingIndicator() {
-    const indicator = document.getElementById('humanity-recording-indicator');
-    if (indicator) indicator.remove();
   }
 
   showMessage(text, color) {
@@ -633,19 +521,14 @@ class TypingRecorder {
     msg.textContent = text;
     msg.style.cssText = `
       position: fixed !important;
-      top: 16px !important;
-      right: 16px !important;
-      background: ${color} !important;
-      color: white !important;
-      padding: 10px 20px !important;
-      border-radius: 8px !important;
-      z-index: 2147483647 !important;
-      font-weight: 500 !important;
+      top: 16px !important; right: 16px !important;
+      background: ${color} !important; color: white !important;
+      padding: 10px 20px !important; border-radius: 8px !important;
+      z-index: 2147483647 !important; font-weight: 500 !important;
       font-size: 13px !important;
       font-family: 'Google Sans', 'Segoe UI', Roboto, sans-serif !important;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
     `;
-
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 3000);
   }
@@ -667,17 +550,11 @@ class TypingRecorder {
 
   handleToggle(enabled) {
     this.enabled = enabled;
-
     if (enabled) {
       if (!this.button) this.createButton();
     } else {
-      if (this.button) {
-        this.button.remove();
-        this.button = null;
-      }
-      if (this.isRecording) {
-        this.stopRecording();
-      }
+      if (this.button) { this.button.remove(); this.button = null; }
+      if (this.isRecording) this.closeModal();
     }
   }
 }

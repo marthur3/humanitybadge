@@ -213,13 +213,21 @@ suite.test('Extension initializes correctly', async function() {
   }
 });
 
-suite.test('findInputElement finds textarea', function() {
+suite.test('startRecording initializes recording state', function() {
   const recorder = new this.TypingRecorder();
-  const element = recorder.findInputElement();
+  const textarea = global.document.createElement('textarea');
+  recorder.startRecording(textarea);
 
-  if (!element) {
-    throw new Error('Should find a textarea element');
+  if (!recorder.isRecording) {
+    throw new Error('Should be recording after startRecording');
   }
+
+  if (!recorder.recording || !recorder.recording.id) {
+    throw new Error('Should initialize recording with ID');
+  }
+
+  recorder.isRecording = false;
+  recorder.boundHandlers = null;
 });
 
 suite.test('Recording start/stop lifecycle', async function() {
@@ -240,10 +248,6 @@ suite.test('Recording start/stop lifecycle', async function() {
 
   if (!recorder.recording.id) {
     throw new Error('Recording should have an ID');
-  }
-
-  if (recorder.currentElement !== textarea) {
-    throw new Error('Should track the current element');
   }
 
   // Simulate some typing events
@@ -292,36 +296,34 @@ suite.test('Chrome extension message passing', function() {
   });
 });
 
-suite.test('Paste prevention in event handler', function() {
+suite.test('Paste prevention via blockPaste', function() {
   const recorder = new this.TypingRecorder();
+  recorder.modal = null;
   let prevented = false;
 
   const mockPasteEvent = {
-    type: 'paste',
     preventDefault: () => { prevented = true; },
     stopPropagation: () => {}
   };
 
-  recorder.isRecording = true;
-  recorder.handleEvent(mockPasteEvent);
+  recorder.blockPaste(mockPasteEvent);
 
   if (!prevented) {
     throw new Error('Paste event should be prevented');
   }
 });
 
-suite.test('Drop prevention in event handler', function() {
+suite.test('Drop prevention via blockPaste', function() {
   const recorder = new this.TypingRecorder();
+  recorder.modal = null;
   let prevented = false;
 
   const mockDropEvent = {
-    type: 'drop',
     preventDefault: () => { prevented = true; },
     stopPropagation: () => {}
   };
 
-  recorder.isRecording = true;
-  recorder.handleEvent(mockDropEvent);
+  recorder.blockPaste(mockDropEvent);
 
   if (!prevented) {
     throw new Error('Drop event should be prevented');
@@ -334,14 +336,11 @@ suite.test('Event recording captures keystrokes', async function() {
   const textarea = global.document.createElement('textarea');
   textarea.value = 'A';
 
+  recorder.modalTextarea = textarea;
   recorder.startRecording(textarea);
 
-  const mockInputEvent = {
-    type: 'input',
-    key: 'a'
-  };
-
-  recorder.handleEvent(mockInputEvent);
+  const mockInputEvent = { inputType: 'insertText' };
+  recorder.handleInput(mockInputEvent);
 
   if (recorder.recording.events.length === 0) {
     throw new Error('Should record input events');
@@ -353,13 +352,21 @@ suite.test('Event recording captures keystrokes', async function() {
   }
 });
 
-suite.test('Null element rejected for recording', function() {
+suite.test('Recording requires valid textarea element', function() {
   const recorder = new this.TypingRecorder();
-  recorder.startRecording(null);
+  const textarea = global.document.createElement('textarea');
+  recorder.startRecording(textarea);
 
-  if (recorder.isRecording) {
-    throw new Error('Should not start recording with null element');
+  if (!recorder.isRecording) {
+    throw new Error('Should start recording with valid textarea');
   }
+
+  if (!recorder.recording) {
+    throw new Error('Should have recording object');
+  }
+
+  recorder.isRecording = false;
+  recorder.boundHandlers = null;
 });
 
 suite.test('Extension toggle works', function() {

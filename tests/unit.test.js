@@ -175,8 +175,8 @@ suite.test('TypingRecorder class initialization', () => {
     throw new Error('recording should be null initially');
   }
 
-  if (recorder.currentElement !== null) {
-    throw new Error('currentElement should be null initially');
+  if (recorder.modal !== null) {
+    throw new Error('modal should be null initially');
   }
 
   if (recorder.enabled !== true) {
@@ -203,31 +203,41 @@ suite.test('Reddit domain detection', () => {
   global.window.location.hostname = 'reddit.com';
 });
 
-suite.test('findInputElement returns valid textarea', () => {
+suite.test('Composer modal starts recording immediately', () => {
   const recorder = new TypingRecorder();
-  const element = recorder.findInputElement();
 
-  if (!element) {
-    throw new Error('Should find a textarea element');
+  // Simulate what openComposer does: startRecording with a mock textarea
+  const mockTextarea = {
+    value: '',
+    addEventListener: () => {},
+    removeEventListener: () => {}
+  };
+  recorder.startRecording(mockTextarea);
+
+  if (!recorder.isRecording) {
+    throw new Error('Should be recording after startRecording');
   }
 
-  if (element.tagName !== 'textarea') {
-    throw new Error('Found element should be a textarea');
+  if (!recorder.recording || !recorder.recording.id) {
+    throw new Error('Recording object should be initialized');
   }
+
+  // Cleanup
+  recorder.isRecording = false;
+  recorder.boundHandlers = null;
 });
 
-suite.test('Paste prevention in handleEvent', () => {
+suite.test('Paste prevention via blockPaste', () => {
   const recorder = new TypingRecorder();
-  recorder.isRecording = true;
+  recorder.modal = null; // no modal DOM in tests
   let prevented = false;
 
   const mockPasteEvent = {
-    type: 'paste',
     preventDefault: () => { prevented = true; },
     stopPropagation: () => {}
   };
 
-  recorder.handleEvent(mockPasteEvent);
+  recorder.blockPaste(mockPasteEvent);
 
   if (!prevented) {
     throw new Error('Paste event should be prevented');
@@ -236,11 +246,10 @@ suite.test('Paste prevention in handleEvent', () => {
 
 suite.test('Keyboard paste (Ctrl+V) prevention', () => {
   const recorder = new TypingRecorder();
-  recorder.isRecording = true;
+  recorder.modal = null;
   let prevented = false;
 
   const mockCtrlV = {
-    type: 'keydown',
     ctrlKey: true,
     metaKey: false,
     key: 'v',
@@ -248,7 +257,7 @@ suite.test('Keyboard paste (Ctrl+V) prevention', () => {
     stopPropagation: () => {}
   };
 
-  recorder.handleEvent(mockCtrlV);
+  recorder.handleKeydown(mockCtrlV);
 
   if (!prevented) {
     throw new Error('Ctrl+V should be prevented');
@@ -298,30 +307,13 @@ suite.test('Verification - too fast rejection', () => {
 suite.test('Recording data structure', () => {
   const recorder = new TypingRecorder();
 
-  const mockElement = {
+  const mockTextarea = {
     value: 'test content',
-    textContent: '',
-    tagName: 'TEXTAREA',
-    placeholder: 'Enter text...',
-    disabled: false,
-    readOnly: false,
     addEventListener: () => {},
-    removeEventListener: () => {},
-    getBoundingClientRect: () => ({ width: 200, height: 100 })
+    removeEventListener: () => {}
   };
 
-  // Simulate startRecording without DOM side effects
-  recorder.isRecording = true;
-  recorder.currentElement = mockElement;
-  recorder.startTime = Date.now();
-  recorder.recording = {
-    id: recorder.generateId(),
-    startTime: recorder.startTime,
-    events: [],
-    initialValue: mockElement.value || mockElement.textContent || '',
-    url: global.window.location.href,
-    domain: global.window.location.hostname
-  };
+  recorder.startRecording(mockTextarea);
 
   if (!recorder.recording.id || typeof recorder.recording.id !== 'string') {
     throw new Error('Recording should have valid ID');
