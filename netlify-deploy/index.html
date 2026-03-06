@@ -214,12 +214,10 @@
   </div>
 
   <script>
-  // ── JSONBlob helper ───────────────────────────────────────────────────────
+  // ── JSONBlob helper (proxied via Netlify Function to avoid CORS) ──────────
   async function loadFromBlob(blobId) {
-    const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
-      headers: { Accept: 'application/json' }
-    });
-    if (!res.ok) throw new Error(`JSONBlob ${res.status}`);
+    const res = await fetch(`/.netlify/functions/load?id=${encodeURIComponent(blobId)}`);
+    if (!res.ok) throw new Error(`Could not load recording (${res.status})`);
     return res.json();
   }
 
