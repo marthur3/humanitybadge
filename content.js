@@ -374,7 +374,7 @@ class TypingRecorder {
     const isAuthentic = verification && verification.isAuthentic;
 
     const badgeLine = isAuthentic && shareUrl
-      ? `\n\n[Humanity Badge: Verified Human \u2713 | ${verification.wpm} WPM](${shareUrl})`
+      ? `\n\n\u2713 Humanity Badge \u00b7 ${verification.wpm} WPM \u00b7 ${shareUrl}`
       : '';
     const fullText = commentText + badgeLine;
 
