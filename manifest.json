@@ -1,19 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Humanity Badge - Verified Human Typing",
-  "version": "2.1",
-  "description": "Verify authentic human typing with anti-paste protection and Humanity Badge certification",
-  "homepage_url": "https://github.com/marthur3/humanitybadge",
+  "name": "Humanitype - Verified Human Typing",
+  "version": "1.0",
+  "description": "Prove your comment is human-typed. Record, verify, and share a replay link — paste it anywhere as proof.",
+  "homepage_url": "https://humanitype.netlify.app",
   "permissions": [
     "storage",
     "activeTab",
-    "scripting",
-    "identity",
-    "notifications"
+    "tabs"
   ],
   "host_permissions": [
-    "https://api.github.com/*",
-    "https://github.com/*",
     "https://is.gd/*",
     "https://jsonblob.com/*"
   ],
@@ -31,12 +27,12 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Humanity Badge"
+    "default_title": "Humanitype"
   },
   "options_page": "settings.html",
   "web_accessible_resources": [
     {
-      "resources": ["replay.html", "replay.js", "replay.css", "standalone-replay.html", "share-formatter.js", "onboarding.html"],
+      "resources": ["replay.html", "replay.js", "replay.css"],
       "matches": ["*://*/*"]
     }
   ],

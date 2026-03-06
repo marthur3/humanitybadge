@@ -8,7 +8,7 @@
     "test:integration": "node tests/integration.test.js",
     "test:all": "npm run test && npm run test:integration",
     "lint": "eslint *.js tests/*.js --fix",
-    "build": "zip -r humanity-badge-extension.zip . -x '*.git*' '*.DS_Store*' 'tests/*' 'node_modules/*' 'package*.json' '.claude/*' 'CLAUDE.md' '*.zip' 'test-manifest.json'",
+    "build": "zip -r humanitype-extension.zip . -x '*.git*' '*.DS_Store*' 'tests/*' 'node_modules/*' 'package*.json' '.claude/*' 'CLAUDE.md' '*.zip' 'test-manifest.json' 'github-oauth.js' 'gist-uploader.js' 'onboarding.html' 'onboarding.js' 'standalone-replay.html' 'share-formatter.js' 'netlify-deploy/*' '*.md'",
     "dev": "echo 'Load unpacked extension from current directory in Chrome'"
   },
   "keywords": [

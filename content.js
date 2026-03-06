@@ -35,7 +35,7 @@ class TypingRecorder {
 
     this.button = document.createElement('button');
     this.button.className = 'humanity-badge-btn';
-    this.button.title = 'Humanity Badge — Type a verified comment';
+    this.button.title = 'Humanitype — Type a verified comment';
     this.button.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
 
     this.button.style.cssText = `
@@ -126,7 +126,7 @@ class TypingRecorder {
             flex-shrink: 0;
           "></div>
           <span style="font-weight: 600; font-size: 15px; color: #202124; flex: 1;">
-            Humanity Badge — Type Your Comment
+            Humanitype — Type Your Comment
           </span>
           <button id="hb-cancel-x" style="
             background: none; border: none; cursor: pointer;
@@ -140,7 +140,7 @@ class TypingRecorder {
           background: #fce8e6; color: #c5221f;
           padding: 8px 20px; font-size: 12px; font-weight: 500;
           border-bottom: 1px solid #f5c6c2;
-        ">Paste blocked — type manually to earn Humanity Badge verification</div>
+        ">Paste blocked — type manually to earn Humanitype verification</div>
 
         <textarea id="hb-textarea"
           placeholder="Type your comment here... Paste is blocked to ensure authenticity."
@@ -381,7 +381,7 @@ class TypingRecorder {
     const isAuthentic = verification && verification.isAuthentic;
 
     const badgeLine = isAuthentic && shareUrl
-      ? `\n\n\u2713 Humanity Badge \u00b7 ${verification.wpm} WPM \u00b7 ${shareUrl}`
+      ? `\n\n\u2713 Humanitype \u00b7 ${verification.wpm} WPM \u00b7 ${shareUrl}`
       : '';
     const fullText = commentText + badgeLine;
 
@@ -398,7 +398,7 @@ class TypingRecorder {
         <div style="font-size: 24px; line-height: 1;">${isAuthentic ? '✓' : '✗'}</div>
         <div style="flex: 1;">
           <div style="font-weight: 600; font-size: 15px;">
-            ${isAuthentic ? 'Humanity Badge Verified' : 'Verification Failed'}
+            ${isAuthentic ? 'Humanitype Verified' : 'Verification Failed'}
           </div>
           <div style="font-size: 12px; opacity: 0.88; margin-top: 2px;">
             ${isAuthentic
@@ -520,7 +520,7 @@ class TypingRecorder {
     const wpm = (verification && verification.wpm) || 0;
     return {
       reddit: `Verified Human - ${wpm} WPM [Watch Replay](${shareUrl})`,
-      linkedin: `Humanity Badge Verified - Authentic human writing\nView typing proof: ${shareUrl}`
+      linkedin: `Humanitype Verified - Authentic human writing\nView typing proof: ${shareUrl}`
     };
   }
 
